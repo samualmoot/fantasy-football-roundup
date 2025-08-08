@@ -1,10 +1,17 @@
 from django.shortcuts import render
-from django.http import HttpRequest, HttpResponse
+from django.http import HttpRequest, HttpResponse, JsonResponse
+from django.utils.crypto import salted_hmac
 
 from .espn_utils import get_league
-from .services.espn_service import get_scoreboard, get_standings_with_movement
+from .services.espn_service import get_scoreboard, get_standings_with_movement, get_top_players, get_previous_standings, get_bottom_players
 from .services.report_builder import compute_incentives, build_prompt_inputs
-from .ai_client import generate_weekly_narrative
+from .ai_client import (
+    generate_weekly_narrative,
+    generate_overview,
+    generate_storylines,
+    generate_matchup_highlights,
+)
+from .ai_jobs import ensure_job, get_job_result
 
 
 def weekly_report(request: HttpRequest, year: int, week: int) -> HttpResponse:
@@ -22,10 +29,12 @@ def weekly_report(request: HttpRequest, year: int, week: int) -> HttpResponse:
     scoreboard = get_scoreboard(league, week)
     standings = get_standings_with_movement(league, week)
     incentives = compute_incentives(scoreboard)
+    incentives["top_players"] = get_top_players(league, week, top_n=3)
+    incentives["bottom_players"] = get_bottom_players(league, week, bottom_n=3)
 
-    prompt_inputs = build_prompt_inputs(league_name, week, scoreboard, standings, incentives)
-    narrative = generate_weekly_narrative(prompt_inputs)
-
+    # Do NOT block on AI here; page should render immediately.
+    # The narrative will be fetched asynchronously via a JSON endpoint.
+    narrative = {}
     context = {
         "league_name": league_name,
         "year": year,
@@ -40,3 +49,80 @@ def weekly_report(request: HttpRequest, year: int, week: int) -> HttpResponse:
         "narrative": narrative,
     }
     return render(request, "roundup/report.html", context)
+
+
+def weekly_report_narrative_api(request: HttpRequest, year: int, week: int) -> JsonResponse:
+    """Return the AI-generated narrative as JSON. Intended to be called by the client after initial page render."""
+    league = get_league(year=year)
+    league_name = getattr(getattr(league, "settings", None), "name", str(league.league_id))
+
+    scoreboard = get_scoreboard(league, week)
+    standings = get_standings_with_movement(league, week)
+    incentives = compute_incentives(scoreboard)
+
+    prompt_inputs = build_prompt_inputs(league_name, week, scoreboard, standings, incentives)
+    narrative = generate_weekly_narrative(prompt_inputs)
+    return JsonResponse(narrative)
+
+
+def weekly_report_overview_api(request: HttpRequest, year: int, week: int) -> JsonResponse:
+    league = get_league(year=year)
+    league_name = getattr(getattr(league, "settings", None), "name", str(league.league_id))
+    scoreboard = get_scoreboard(league, week)
+    standings = get_standings_with_movement(league, week)
+    incentives = compute_incentives(scoreboard)
+    top_players = get_top_players(league, week, top_n=3)
+    previous = get_previous_standings(league, week)
+    inputs = build_prompt_inputs(league_name, week, scoreboard, standings, incentives, top_players, previous)
+    cache_key = salted_hmac("overview", f"{league_name}:{year}:{week}").hexdigest()
+
+    def job():
+        return {"overview": generate_overview(inputs)}
+
+    state = ensure_job(cache_key, job)
+    if state == "pending":
+        return JsonResponse({"status": "pending"}, status=202)
+    result = get_job_result(cache_key)
+    return JsonResponse(result or {"overview": ""})
+
+
+def weekly_report_storylines_api(request: HttpRequest, year: int, week: int) -> JsonResponse:
+    league = get_league(year=year)
+    league_name = getattr(getattr(league, "settings", None), "name", str(league.league_id))
+    scoreboard = get_scoreboard(league, week)
+    standings = get_standings_with_movement(league, week)
+    incentives = compute_incentives(scoreboard)
+    top_players = get_top_players(league, week, top_n=3)
+    previous = get_previous_standings(league, week)
+    inputs = build_prompt_inputs(league_name, week, scoreboard, standings, incentives, top_players, previous)
+    cache_key = salted_hmac("storylines", f"{league_name}:{year}:{week}").hexdigest()
+
+    def job():
+        return {"storylines": generate_storylines(inputs)}
+
+    state = ensure_job(cache_key, job)
+    if state == "pending":
+        return JsonResponse({"status": "pending"}, status=202)
+    result = get_job_result(cache_key)
+    return JsonResponse(result or {"storylines": ""})
+
+
+def weekly_report_highlights_api(request: HttpRequest, year: int, week: int) -> JsonResponse:
+    league = get_league(year=year)
+    league_name = getattr(getattr(league, "settings", None), "name", str(league.league_id))
+    scoreboard = get_scoreboard(league, week)
+    standings = get_standings_with_movement(league, week)
+    incentives = compute_incentives(scoreboard)
+    top_players = get_top_players(league, week, top_n=3)
+    previous = get_previous_standings(league, week)
+    inputs = build_prompt_inputs(league_name, week, scoreboard, standings, incentives, top_players, previous)
+    cache_key = salted_hmac("highlights", f"{league_name}:{year}:{week}").hexdigest()
+
+    def job():
+        return {"matchup_highlights": generate_matchup_highlights(inputs)}
+
+    state = ensure_job(cache_key, job)
+    if state == "pending":
+        return JsonResponse({"status": "pending"}, status=202)
+    result = get_job_result(cache_key)
+    return JsonResponse(result or {"matchup_highlights": ""})

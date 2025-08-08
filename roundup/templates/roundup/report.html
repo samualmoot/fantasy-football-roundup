@@ -6,7 +6,7 @@
   <title>{{ league_name }} – Week {{ week }} Roundup</title>
   <style>
     body { font-family: Arial, sans-serif; margin: 0; padding: 16px; color: #111; }
-    .grid { display: grid; grid-template-columns: 2fr 1.2fr; grid-template-rows: auto 1fr auto; gap: 16px; }
+    .grid { display: grid; grid-template-columns: 1fr 2.5fr 1fr; grid-template-rows: auto auto 1fr; gap: 16px; min-height: 100vh; }
     header { grid-column: 1 / -1; display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
     .card { background: #fafafa; border: 1px solid #e5e5e5; border-radius: 8px; padding: 12px 14px; }
     h1 { margin: 0; font-size: 22px; }
@@ -29,6 +29,10 @@
     .btn { display: inline-flex; align-items: center; gap: 6px; padding: 6px 10px; border: 1px solid #ddd; border-radius: 6px; background: #fff; color: #111; text-decoration: none; font-size: 14px; }
     .btn:hover { background: #f5f5f5; }
     .btn.disabled { pointer-events: none; opacity: 0.5; }
+    .loading { color: #666; font-style: italic; }
+    .hidden { display: none; }
+    .spinner { width: 16px; height: 16px; border: 2px solid #ddd; border-top-color: #333; border-radius: 50%; display: inline-block; animation: spin 0.9s linear infinite; vertical-align: text-bottom; margin-right: 6px; }
+    @keyframes spin { from { transform: rotate(0deg);} to { transform: rotate(360deg);} }
   </style>
 </head>
 <body>
@@ -52,23 +56,17 @@
       </div>
     </header>
 
-    <section class="card" style="grid-row: 2 / span 1;">
+    <section class="card" style="grid-column: 1 / -1; grid-row: 2;">
       <h2>Overview</h2>
-      <p>{{ narrative.overview }}</p>
-      <div class="two-col">
-        <div>
-          <h3>Storylines</h3>
-          <p>{{ narrative.storylines }}</p>
-        </div>
-        <div>
-          <h3>Matchup Highlights</h3>
-          <p>{{ narrative.matchup_highlights }}</p>
-        </div>
-      </div>
+      <p id="overview">
+        <span class="spinner" id="overview-spinner"></span>
+        <span class="loading">Loading AI overview…</span>
+      </p>
     </section>
 
-    <aside class="card" style="grid-column: 2; grid-row: 2;">
-      <h2>Head-to-Head Scores</h2>
+    <!-- Center: Weekly Scores (fills remaining height) -->
+    <section class="card" style="grid-column: 2; grid-row: 3; display: flex; flex-direction: column;">
+      <h2 style="text-align:center;">Weekly Scores</h2>
       <table class="scores">
         <thead>
           <tr>
@@ -113,34 +111,41 @@
           {% endfor %}
         </tbody>
       </table>
-    </aside>
-
-    <section class="card" style="grid-column: 1; grid-row: 3;">
-      <h2>Weekly Incentives</h2>
-      <ul>
-        <li>
-          <strong>Highest Score:</strong>
-          {% if incentives.highest_score %}
-            {{ incentives.highest_score.winner }} ({{ incentives.highest_score.winner_score }})
-          {% else %}—{% endif %}
-        </li>
-        <li>
-          <strong>Closest Game:</strong>
-          {% if incentives.closest_game %}
-            {{ incentives.closest_game.winner }} def. {{ incentives.closest_game.loser }} by {{ incentives.closest_game.margin }}
-          {% else %}—{% endif %}
-        </li>
-        <li>
-          <strong>Biggest Blowout:</strong>
-          {% if incentives.biggest_blowout %}
-            {{ incentives.biggest_blowout.winner }} def. {{ incentives.biggest_blowout.loser }} by {{ incentives.biggest_blowout.margin }}
-          {% else %}—{% endif %}
-        </li>
-      </ul>
-      <p class="muted">{{ narrative.incentives_blurb }}</p>
     </section>
 
-    <aside class="card" style="grid-column: 2; grid-row: 3;">
+    <!-- Left: Weekly Incentive Winner + Top NFL performers -->
+    <aside class="card" style="grid-column: 1; grid-row: 3;">
+      <h2>Weekly Incentive Winner</h2>
+      <p>
+        {% if incentives.highest_score %}
+          <strong>Highest Score:</strong>
+          {{ incentives.highest_score.winner }} ({{ incentives.highest_score.winner_score }})
+        {% else %}
+          <span class="muted">No data.</span>
+        {% endif %}
+      </p>
+      <hr/>
+      <h3 style="margin-top:8px;">Top NFL Performers</h3>
+      <ul>
+        {% for p in incentives.top_players %}
+          <li>{{ p.player_name }} ({{ p.position }}, {{ p.nfl_team }}) – {{ p.points }} pts for {{ p.fantasy_team }}</li>
+        {% empty %}
+          <li class="muted">No player data available.</li>
+        {% endfor %}
+      </ul>
+
+      <h3 style="margin-top:8px;">Top NFL Busts</h3>
+      <ul>
+        {% for p in incentives.bottom_players %}
+          <li>{{ p.player_name }} ({{ p.position }}, {{ p.nfl_team }}) – {{ p.points }} pts for {{ p.fantasy_team }}</li>
+        {% empty %}
+          <li class="muted">No player data available.</li>
+        {% endfor %}
+      </ul>
+    </aside>
+
+    <!-- Right: Standings -->
+    <aside class="card" style="grid-column: 3; grid-row: 3;">
       <h2>Standings</h2>
       <table>
         <thead>
@@ -165,8 +170,47 @@
           {% endfor %}
         </tbody>
       </table>
-      <p class="muted">{{ narrative.standings_blurb }}</p>
     </aside>
+    
   </div>
+  <script>
+    (function() {
+      const overviewEndpoint = "{% url 'weekly_report_overview_api' year=year week=week %}";
+      function setText(id, text) {
+        const el = document.getElementById(id);
+        if (el) { el.textContent = text || ''; }
+      }
+      function hideSpinner(id) {
+        const spinner = document.getElementById(id);
+        if (spinner) { spinner.classList.add('hidden'); }
+      }
+      function showError(id, spinnerId, msg) {
+        hideSpinner(spinnerId);
+        const el = document.getElementById(id);
+        if (el) { el.innerHTML = `<span class="loading">${msg}</span>`; }
+      }
+      // Fetch smaller chunks in parallel
+      function poll(endpoint, onOk, onError) {
+        fetch(endpoint)
+          .then(r => {
+            if (r.status === 202) throw new Error('pending');
+            if (!r.ok) throw new Error('error');
+            return r.json();
+          })
+          .then(onOk)
+          .catch(() => {
+            onError();
+            setTimeout(() => poll(endpoint, onOk, onError), 4000);
+          });
+      }
+
+      poll(overviewEndpoint, (d) => {
+        setText('overview', d.overview || '');
+        hideSpinner('overview-spinner');
+      }, () => {
+        showError('overview', 'overview-spinner', 'Overview is taking longer than usual…');
+      });
+    })();
+  </script>
 </body>
 </html>

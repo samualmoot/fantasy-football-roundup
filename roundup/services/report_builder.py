@@ -34,7 +34,15 @@ def compute_incentives(scoreboard: List[Dict[str, Any]]) -> Dict[str, Any]:
     }
 
 
-def build_prompt_inputs(league_name: str, week: int, scoreboard: List[Dict[str, Any]], standings: List[Dict[str, Any]], incentives: Dict[str, Any]) -> Dict[str, Any]:
+def build_prompt_inputs(
+    league_name: str,
+    week: int,
+    scoreboard: List[Dict[str, Any]],
+    standings: List[Dict[str, Any]],
+    incentives: Dict[str, Any],
+    top_players: List[Dict[str, Any]] | None = None,
+    previous_standings: List[Dict[str, Any]] | None = None,
+) -> Dict[str, Any]:
     # Keep inputs compact; include top-5 standings only
     compact_standings = standings[:5]
     compact_scoreboard = [
@@ -47,10 +55,35 @@ def build_prompt_inputs(league_name: str, week: int, scoreboard: List[Dict[str, 
         }
         for m in scoreboard
     ]
+    # Derived facts for a better overview
+    close_games = [
+        {
+            "home": m["home_team"],
+            "away": m["away_team"],
+            "margin": m.get("margin", 0.0),
+            "winner": m.get("winner"),
+        }
+        for m in scoreboard
+        if (m.get("margin") is not None) and m.get("margin", 0.0) < 5.0 and m.get("winner")
+    ]
+    undefeated = [s["team_name"] for s in compact_standings if s.get("losses", 0) == 0 and s.get("wins", 0) > 0]
+
+    prev_by_id = {s.get("team_id"): s for s in (previous_standings or []) if s.get("team_id") is not None}
+    first_wins = []
+    for s in standings:
+        tid = s.get("team_id")
+        prev = prev_by_id.get(tid)
+        if prev and prev.get("wins", 0) == 0 and s.get("wins", 0) > 0:
+            first_wins.append(s.get("team_name"))
+
     return {
         "league_name": league_name,
         "week": week,
         "scoreboard": compact_scoreboard,
         "standings_top5": compact_standings,
         "incentives": incentives,
+        "top_players": (top_players or [])[:3],
+        "close_games": close_games[:3],
+        "undefeated_teams": undefeated[:3],
+        "first_wins": first_wins[:3],
     }

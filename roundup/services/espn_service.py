@@ -1,6 +1,19 @@
 from typing import List, Dict, Any
 from espn_api.football import League
+import functools
 
+# Cache for box scores to avoid repeated API calls
+_box_score_cache = {}
+
+def _get_cached_box_scores(league: League, week: int) -> List:
+    """Get box scores with caching to avoid repeated API calls."""
+    cache_key = f"{league.league_id}_{league.year}_{week}"
+    if cache_key not in _box_score_cache:
+        try:
+            _box_score_cache[cache_key] = league.box_scores(week)
+        except Exception:
+            _box_score_cache[cache_key] = []
+    return _box_score_cache[cache_key]
 
 def get_scoreboard(league: League, week: int) -> List[Dict[str, Any]]:
     """
@@ -8,10 +21,7 @@ def get_scoreboard(league: League, week: int) -> List[Dict[str, Any]]:
     If one side's score is 0 while the other is > 0, treat that side as a BYE.
     """
     matchups = []
-    try:
-        box_scores = league.box_scores(week)
-    except Exception:
-        box_scores = []
+    box_scores = _get_cached_box_scores(league, week)
 
     for b in box_scores:
         home_team_obj = getattr(b, "home_team", None)
@@ -69,10 +79,7 @@ def _compute_standings_through_week(league: League, through_week: int) -> List[D
         }
 
     for wk in range(1, max(1, through_week) + 1):
-        try:
-            boxes = league.box_scores(wk)
-        except Exception:
-            boxes = []
+        boxes = _get_cached_box_scores(league, wk)
         for b in boxes:
             ht = getattr(b, "home_team", None)
             at = getattr(b, "away_team", None)
@@ -156,3 +163,96 @@ def get_standings_with_movement(league: League, week: int) -> List[Dict[str, Any
                 s["movement_is_up"] = delta > 0
                 s["movement_abs"] = abs(delta)
     return current
+
+
+def get_top_players(league: League, week: int, top_n: int = 3) -> List[Dict[str, Any]]:
+    """Return top-N NFL player fantasy scorers for the given week across all teams.
+    Bench/IR players are ignored when detectable via slot_position.
+    """
+    players: List[Dict[str, Any]] = []
+    box_scores = _get_cached_box_scores(league, week)
+
+    def add_lineup(lineup, fantasy_team_name: str):
+        for pl in lineup or []:
+            try:
+                points = float(getattr(pl, "points", 0.0) or 0.0)
+            except Exception:
+                points = 0.0
+            slot = getattr(pl, "slot_position", None)
+            # Exclude bench/IR if known
+            if isinstance(slot, str) and slot.upper() in {"BE", "IR", "IR-R", "OUT", "RES"}:
+                continue
+            name = getattr(pl, "name", getattr(pl, "playerName", "Player"))
+            position = getattr(pl, "position", None)
+            nfl_team = getattr(pl, "proTeam", getattr(pl, "proTeamAbbreviation", None))
+            players.append({
+                "player_name": name,
+                "position": position,
+                "nfl_team": nfl_team,
+                "points": round(points, 1),
+                "fantasy_team": fantasy_team_name,
+            })
+
+    for b in box_scores:
+        home_team_obj = getattr(b, "home_team", None)
+        away_team_obj = getattr(b, "away_team", None)
+        home_name = getattr(home_team_obj, "team_name", str(getattr(home_team_obj, "team_id", "Home")))
+        away_name = getattr(away_team_obj, "team_name", str(getattr(away_team_obj, "team_id", "Away")))
+        add_lineup(getattr(b, "home_lineup", []), home_name)
+        add_lineup(getattr(b, "away_lineup", []), away_name)
+
+    players.sort(key=lambda x: x.get("points", 0.0), reverse=True)
+    return players[:max(0, top_n)]
+
+# Function to clear cache if needed
+def clear_box_score_cache():
+    """Clear the box score cache. Useful for testing or when data might be stale."""
+    global _box_score_cache
+    _box_score_cache = {}
+
+
+def get_bottom_players(league: League, week: int, bottom_n: int = 3) -> List[Dict[str, Any]]:
+    """Return bottom-N scoring starters for the given week across all teams.
+    Bench/IR are excluded when detectable via slot_position. Sorted ascending by points.
+    """
+    players: List[Dict[str, Any]] = []
+    box_scores = _get_cached_box_scores(league, week)
+
+    def add_lineup(lineup, fantasy_team_name: str):
+        for pl in lineup or []:
+            try:
+                points = float(getattr(pl, "points", 0.0) or 0.0)
+            except Exception:
+                points = 0.0
+            slot = getattr(pl, "slot_position", None)
+            # Exclude bench/IR if known
+            if isinstance(slot, str) and slot.upper() in {"BE", "IR", "IR-R", "OUT", "RES"}:
+                continue
+            name = getattr(pl, "name", getattr(pl, "playerName", "Player"))
+            position = getattr(pl, "position", None)
+            nfl_team = getattr(pl, "proTeam", getattr(pl, "proTeamAbbreviation", None))
+            players.append({
+                "player_name": name,
+                "position": position,
+                "nfl_team": nfl_team,
+                "points": round(points, 1),
+                "fantasy_team": fantasy_team_name,
+            })
+
+    for b in box_scores:
+        home_team_obj = getattr(b, "home_team", None)
+        away_team_obj = getattr(b, "away_team", None)
+        home_name = getattr(home_team_obj, "team_name", str(getattr(home_team_obj, "team_id", "Home")))
+        away_name = getattr(away_team_obj, "team_name", str(getattr(away_team_obj, "team_id", "Away")))
+        add_lineup(getattr(b, "home_lineup", []), home_name)
+        add_lineup(getattr(b, "away_lineup", []), away_name)
+
+    players.sort(key=lambda x: x.get("points", 0.0))
+    return players[:max(0, bottom_n)]
+
+
+def get_previous_standings(league: League, week: int) -> List[Dict[str, Any]]:
+    """Return standings through week-1 (empty for week <= 1)."""
+    if week <= 1:
+        return []
+    return _compute_standings_through_week(league, week - 1)
