@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{{ league_name }} – Week {{ week }} Roundup</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 0; padding: 16px; color: #111; }
+    .grid { display: grid; grid-template-columns: 2fr 1.2fr; grid-template-rows: auto 1fr auto; gap: 16px; }
+    header { grid-column: 1 / -1; display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+    .card { background: #fafafa; border: 1px solid #e5e5e5; border-radius: 8px; padding: 12px 14px; }
+    h1 { margin: 0; font-size: 22px; }
+    h2 { margin: 0 0 8px; font-size: 18px; }
+    ul { margin: 8px 0; padding-left: 18px; }
+    table { width: 100%; border-collapse: collapse; }
+    th, td { padding: 6px 8px; border-bottom: 1px solid #eee; }
+    th { text-align: left; }
+    .muted { color: #666; font-size: 13px; }
+    .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .scores { font-variant-numeric: tabular-nums; }
+    .team-cell { display: flex; align-items: center; gap: 8px; }
+    .team-cell img { width: 22px; height: 22px; border-radius: 4px; object-fit: cover; background: #fff; border: 1px solid #ddd; }
+    .score-col { width: 70px; text-align: center; }
+    .vs-col { width: 32px; text-align: center; color: #999; }
+    .move { font-size: 12px; margin-left: 6px; }
+    .move.up { color: #138a36; }
+    .move.down { color: #c92a2a; }
+    .nav { display: flex; align-items: center; gap: 8px; }
+    .btn { display: inline-flex; align-items: center; gap: 6px; padding: 6px 10px; border: 1px solid #ddd; border-radius: 6px; background: #fff; color: #111; text-decoration: none; font-size: 14px; }
+    .btn:hover { background: #f5f5f5; }
+    .btn.disabled { pointer-events: none; opacity: 0.5; }
+  </style>
+</head>
+<body>
+  <div class="grid">
+    <header>
+      <div>
+        <h1>{{ league_name }} – Week {{ week }} Roundup</h1>
+        <div class="muted">Consistent layout: scores (top-right), incentives (bottom-left)</div>
+      </div>
+      <div class="nav">
+        {% if prev_disabled %}
+          <span class="btn disabled">◀ Previous</span>
+        {% else %}
+          <a class="btn" href="{% url 'weekly_report' year=year week=prev_week %}">◀ Previous</a>
+        {% endif %}
+        {% if next_disabled %}
+          <span class="btn disabled">Next ▶</span>
+        {% else %}
+          <a class="btn" href="{% url 'weekly_report' year=year week=next_week %}">Next ▶</a>
+        {% endif %}
+      </div>
+    </header>
+
+    <section class="card" style="grid-row: 2 / span 1;">
+      <h2>Overview</h2>
+      <p>{{ narrative.overview }}</p>
+      <div class="two-col">
+        <div>
+          <h3>Storylines</h3>
+          <p>{{ narrative.storylines }}</p>
+        </div>
+        <div>
+          <h3>Matchup Highlights</h3>
+          <p>{{ narrative.matchup_highlights }}</p>
+        </div>
+      </div>
+    </section>
+
+    <aside class="card" style="grid-column: 2; grid-row: 2;">
+      <h2>Head-to-Head Scores</h2>
+      <table class="scores">
+        <thead>
+          <tr>
+            <th>Home</th>
+            <th class="score-col">Score</th>
+            <th class="vs-col">vs</th>
+            <th class="score-col">Score</th>
+            <th>Away</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for m in scoreboard %}
+          <tr>
+            <td>
+              <div class="team-cell">
+                {% if m.home_logo %}<img src="{{ m.home_logo }}" alt="{{ m.home_team }} logo" />{% endif %}
+                <span>{{ m.home_team }}</span>
+              </div>
+            </td>
+            <td class="score-col">
+              {% if m.winner == m.home_team %}
+                <strong>{{ m.home_score }}</strong>
+              {% else %}
+                {{ m.home_score }}
+              {% endif %}
+            </td>
+            <td class="vs-col">vs</td>
+            <td class="score-col">
+              {% if m.winner == m.away_team %}
+                <strong>{{ m.away_score }}</strong>
+              {% else %}
+                {{ m.away_score }}
+              {% endif %}
+            </td>
+            <td>
+              <div class="team-cell">
+                <span>{{ m.away_team }}</span>
+                {% if m.away_logo %}<img src="{{ m.away_logo }}" alt="{{ m.away_team }} logo" />{% endif %}
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </aside>
+
+    <section class="card" style="grid-column: 1; grid-row: 3;">
+      <h2>Weekly Incentives</h2>
+      <ul>
+        <li>
+          <strong>Highest Score:</strong>
+          {% if incentives.highest_score %}
+            {{ incentives.highest_score.winner }} ({{ incentives.highest_score.winner_score }})
+          {% else %}—{% endif %}
+        </li>
+        <li>
+          <strong>Closest Game:</strong>
+          {% if incentives.closest_game %}
+            {{ incentives.closest_game.winner }} def. {{ incentives.closest_game.loser }} by {{ incentives.closest_game.margin }}
+          {% else %}—{% endif %}
+        </li>
+        <li>
+          <strong>Biggest Blowout:</strong>
+          {% if incentives.biggest_blowout %}
+            {{ incentives.biggest_blowout.winner }} def. {{ incentives.biggest_blowout.loser }} by {{ incentives.biggest_blowout.margin }}
+          {% else %}—{% endif %}
+        </li>
+      </ul>
+      <p class="muted">{{ narrative.incentives_blurb }}</p>
+    </section>
+
+    <aside class="card" style="grid-column: 2; grid-row: 3;">
+      <h2>Standings</h2>
+      <table>
+        <thead>
+          <tr><th>Team</th><th>W-L-T</th><th>PF</th></tr>
+        </thead>
+        <tbody>
+          {% for t in standings %}
+          <tr>
+            <td>
+              <span>{{ t.team_name }}</span>
+              {% if t.movement_abs %}
+                {% if t.movement_is_up %}
+                  <span class="move up">▲ {{ t.movement_abs }}</span>
+                {% else %}
+                  <span class="move down">▼ {{ t.movement_abs }}</span>
+                {% endif %}
+              {% endif %}
+            </td>
+            <td>{{ t.wins }}-{{ t.losses }}-{{ t.ties }}</td>
+            <td>{{ t.points_for }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      <p class="muted">{{ narrative.standings_blurb }}</p>
+    </aside>
+  </div>
+</body>
+</html>
