@@ -40,6 +40,17 @@
     .hidden { display: none; }
     .spinner { width: 16px; height: 16px; border: 2px solid #ddd; border-top-color: #333; border-radius: 50%; display: inline-block; animation: spin 0.9s linear infinite; vertical-align: text-bottom; margin-right: 6px; }
     @keyframes spin { from { transform: rotate(0deg);} to { transform: rotate(360deg);} }
+    .table-sticky thead th { position: sticky; top: 0; background: #fafafa; z-index: 1; }
+    .pts-col { width: 64px; text-align: center; font-variant-numeric: tabular-nums; font-size: 20px; }
+    /* Booms/Busts table refinements */
+    .bb-table { width: 100%; border-collapse: collapse; }
+    .bb-table th + th, .bb-table td + td { border-left: 1px solid #e5e5e5; }
+    .bb-table .logo-col { width: 36px; text-align: center; }
+    .bb-table .pts-col { width: 80px; font-size: 22px; }
+    .bb-logo { width: 24px; height: 24px; }
+    .bb-name-text strong { font-size: 13px; font-weight: 700; }
+    .bb-sub { font-size: 11px !important; }
+    .section-divider { border-top: 2px solid #e0e0e0; margin: 10px 0 12px; }
   </style>
 </head>
 <body>
@@ -115,65 +126,74 @@
       </table>
     </section>
 
-    <!-- Left: Weekly Incentive Winner + Top NFL performers -->
+    <!-- Left: Booms/Busts (full-height) -->
     <aside class="card" style="grid-column: 1; grid-row: 3;">
-      <h2>Weekly Incentive Winner</h2>
-      <div style="margin-bottom:10px;">
-        <div class="muted">This week's incentive</div>
-        <div><strong>{{ weekly_incentive.this_title }}</strong></div>
+      <h2>Booms &amp; Busts by Position</h2>
+      <div class="table-scroll">
+          <table class="table-sticky bb-table">
+          <thead>
+            <tr>
+                <th style="text-align:left; padding:6px 4px;">Pos</th>
+                <th style="text-align:left; padding:6px 4px;">Boom</th>
+                <th class="pts-col" style="padding:6px 4px;">Pts</th>
+                <th class="pts-col" style="padding:6px 4px;">Pts</th>
+                <th style="text-align:left; padding:6px 4px;">Bust</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for row in incentives.boom_bust_by_position %}
+            <tr>
+                <td style="padding:6px 4px; font-weight:bold;">{{ row.position }}</td>
+                <td style="padding:6px 4px;" class="bb-name">
+                  {% if row.boom %}
+                    <div style="display:flex; align-items:center; gap:8px;">
+                      <div>
+                        <div class="bb-name-text"><strong>{{ row.boom.player_name }}</strong></div>
+                        <div class="muted bb-sub">{{ row.boom.nfl_team }} for {{ row.boom.fantasy_team }}</div>
+                      </div>
+                      {% if row.boom.nfl_logo %}<img class="bb-logo" src="{{ row.boom.nfl_logo }}" alt="{{ row.boom.nfl_team }} logo" />{% endif %}
+                    </div>
+                  {% else %}
+                    <span class="muted">—</span>
+                  {% endif %}
+                </td>
+                <td class="pts-col" style="padding:6px 4px; font-weight:bold;">{% if row.boom %}{{ row.boom.points }}{% else %}—{% endif %}</td>
+                <td class="pts-col" style="padding:6px 4px; font-weight:bold;">{% if row.bust %}{{ row.bust.points }}{% else %}—{% endif %}</td>
+                <td style="padding:6px 4px;" class="bb-name">
+                  {% if row.bust %}
+                    <div style="display:flex; align-items:center; gap:8px;">
+                      {% if row.bust.nfl_logo %}<img class="bb-logo" src="{{ row.bust.nfl_logo }}" alt="{{ row.bust.nfl_team }} logo" />{% endif %}
+                      <div>
+                        <div class="bb-name-text"><strong>{{ row.bust.player_name }}</strong></div>
+                        <div class="muted bb-sub">{{ row.bust.nfl_team }} for {{ row.bust.fantasy_team }}</div>
+                      </div>
+                    </div>
+                  {% else %}
+                    <span class="muted">—</span>
+                  {% endif %}
+                </td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="3" class="muted" style="padding:6px 4px;">No player data available.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
       </div>
-      <div style="margin-bottom:10px;">
-        <div class="muted">Winner</div>
-        <div>{% if weekly_incentive.winner_text %}{{ weekly_incentive.winner_text }}{% else %}<span class="muted">TBD</span>{% endif %}</div>
-      </div>
+      <div class="section-divider"></div>
       <div>
-        <div class="muted">Next week's incentive</div>
-        <div>{{ weekly_incentive.next_title }}</div>
-      </div>
-      <hr/>
-      <h3 style="margin-top:8px;">Top NFL Performers</h3>
-      <div class="two-col">
-        {% for pos in positions %}
-          <div>
-            <strong>{{ pos }}</strong>
-            <ul>
-              {% with leader=position_leaders|get_item:pos %}
-                {% if leader and leader.best and leader.best.0 %}
-                  {% with p=leader.best.0 %}
-                    <li>{{ p.player_name }} – {{ p.points }} pts ({{ p.position }}, {{ p.nfl_team }})</li>
-                  {% endwith %}
-                {% else %}
-                  <li class="muted">—</li>
-                {% endif %}
-              {% endwith %}
-            </ul>
-          </div>
-        {% endfor %}
-      </div>
-
-      <h3 style="margin-top:8px;">Top NFL Busts</h3>
-      <div class="two-col">
-        {% for pos in positions %}
-          <div>
-            <strong>{{ pos }}</strong>
-            <ul>
-              {% with leader=position_leaders|get_item:pos %}
-                {% if leader and leader.busts and leader.busts.0 %}
-                  {% with p=leader.busts.0 %}
-                    <li>{{ p.player_name }} – {{ p.points }} pts ({{ p.position }}, {{ p.nfl_team }})</li>
-                  {% endwith %}
-                {% else %}
-                  <li class="muted">—</li>
-                {% endif %}
-              {% endwith %}
-            </ul>
-          </div>
-        {% endfor %}
+        <h2>Awards of the Week</h2>
+        <ul>
+          {% for a in awards %}
+            <li><strong>{{ a.title }}:</strong> {{ a.text }}</li>
+          {% empty %}
+            <li class="muted">No awards available.</li>
+          {% endfor %}
+        </ul>
       </div>
     </aside>
 
-    <!-- Right: Standings -->
-    <aside class="card" style="grid-column: 3; grid-row: 3;">
+    <!-- Right: Standings and Weekly Incentive -->
+    <aside class="card" style="grid-column: 3; grid-row: 3; display:flex; flex-direction:column; gap:12px;">
       <h2>Standings</h2>
       <table class="standings">
         <thead>
@@ -199,6 +219,22 @@
         </tbody>
       </table>
       <div class="muted" style="margin-top:6px;">Top {{ playoff_team_count }} highlighted as current playoff positions.</div>
+      <div class="section-divider"></div>
+      <div>
+        <h2>Weekly Incentive</h2>
+        <div style="margin-bottom:10px;">
+          <div class="muted">This week's incentive</div>
+          <div><strong>{{ weekly_incentive.this_title }}</strong></div>
+        </div>
+        <div style="margin-bottom:10px;">
+          <div class="muted">Winner</div>
+          <div>{% if weekly_incentive.winner_text %}{{ weekly_incentive.winner_text }}{% else %}<span class="muted">TBD</span>{% endif %}</div>
+        </div>
+        <div>
+          <div class="muted">Next week's incentive</div>
+          <div>{{ weekly_incentive.next_title }}</div>
+        </div>
+      </div>
     </aside>
     
   </div>
@@ -259,6 +295,19 @@
       window.addEventListener('resize', sizeWeeklyScores);
       // Defer to next frame so layout is stable
       requestAnimationFrame(sizeWeeklyScores);
+
+      // Simple tabs in left aside
+      const tabButtons = document.querySelectorAll('.tab-btn');
+      tabButtons.forEach(btn => {
+        btn.addEventListener('click', () => {
+          const tab = btn.getAttribute('data-tab');
+          document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+          const target = document.getElementById(`tab-${tab}`);
+          if (target) target.classList.add('active');
+        });
+      });
     })();
   </script>
 </body>

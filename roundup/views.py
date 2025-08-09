@@ -17,6 +17,8 @@ from .incentives import (
     generate_weekly_incentive_schedule,
     compute_incentive_winner,
     describe_incentive_title,
+    compute_boom_bust_by_position,
+    compute_weekly_awards,
 )
 from .services.report_builder import compute_incentives, build_prompt_inputs
 from .ai_client import (
@@ -53,6 +55,9 @@ def weekly_report(request: HttpRequest, year: int, week: int) -> HttpResponse:
     incentives = compute_incentives(scoreboard)
     incentives["top_players"] = get_top_players(league, week, top_n=3)
     incentives["bottom_players"] = get_bottom_players(league, week, bottom_n=3)
+    # Build boom/bust by position (starters only)
+    all_performances = get_all_player_performances(league, week)
+    incentives["boom_bust_by_position"] = compute_boom_bust_by_position(all_performances)
 
     # Determine regular season length and compute weekly incentive schedule
     # ESPN settings commonly expose finalScoringPeriod as last week index
@@ -66,7 +71,7 @@ def weekly_report(request: HttpRequest, year: int, week: int) -> HttpResponse:
     next_incentive_key = schedule[idx + 1] if idx + 1 < len(schedule) else schedule[0]
 
     # Compute the winner depending on the incentive type
-    performances = get_all_player_performances(league, week)
+    performances = all_performances
     incentive_result = compute_incentive_winner(
         this_incentive_key,
         scoreboard=scoreboard,
@@ -100,6 +105,8 @@ def weekly_report(request: HttpRequest, year: int, week: int) -> HttpResponse:
         },
         "narrative": narrative,
     }
+    # Weekly awards
+    context["awards"] = compute_weekly_awards(scoreboard, standings, all_performances)
     return render(request, "roundup/report.html", context)
 
 

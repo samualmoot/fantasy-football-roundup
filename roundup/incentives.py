@@ -87,6 +87,32 @@ def describe_incentive_title(key: str) -> str:
     return INCENTIVE_TITLES.get(key, key.replace("_", " ").title())
 
 
+# NFL team logo helpers
+_NFL_VALID_CODES = {
+    "ARI","ATL","BAL","BUF","CAR","CHI","CIN","CLE","DAL","DEN","DET","GB","HOU","IND",
+    "JAX","KC","LAC","LAR","LV","MIA","MIN","NE","NO","NYG","NYJ","PHI","PIT","SEA","SF",
+    "TB","TEN","WAS",
+}
+_NFL_NORMALIZE = {
+    "JAC": "JAX",
+    "WSH": "WAS",
+    "LA": "LAR",
+    "SD": "LAC",
+    "STL": "LAR",
+    "OAK": "LV",
+}
+
+
+def _nfl_logo_url(code: Any) -> str | None:
+    if not code:
+        return None
+    abbr = str(code).upper()
+    abbr = _NFL_NORMALIZE.get(abbr, abbr)
+    if abbr not in _NFL_VALID_CODES:
+        return None
+    return f"https://static.www.nfl.com/league/api/clubs/logos/{abbr}.svg"
+
+
 def _winner_from_scoreboard_highest(scoreboard: List[Dict[str, Any]]) -> Tuple[str, float] | None:
     best_name = None
     best_score = None
@@ -328,5 +354,181 @@ def compute_incentive_winner(
         winner_text = ""
 
     return {"title": title, "winner_text": winner_text}
+
+
+def compute_boom_bust_by_position(
+    performances: List[Dict[str, Any]],
+    *,
+    positions: List[str] | None = None,
+) -> List[Dict[str, Any]]:
+    """Return a list of rows with boom/bust per position (starters only).
+
+    Each row: { position, boom: {player_name, points, fantasy_team, nfl_team},
+                bust: { ... } }
+    Supports D/ST or DST equivalently.
+    """
+    if positions is None:
+        positions = ["QB", "RB", "WR", "TE", "K", "D/ST"]
+
+    # Normalize performances to starters and comparable position codes
+    starters: List[Dict[str, Any]] = [p for p in performances if not p.get("is_bench")]
+
+    def matches_position(p: Dict[str, Any], pos: str) -> bool:
+        code = str(p.get("position") or "").upper()
+        if pos.upper() == "D/ST":
+            return code in {"D/ST", "DST", "DEF"}
+        return code == pos.upper()
+
+    def project(p: Dict[str, Any]) -> Dict[str, Any]:
+        try:
+            pts = round(float(p.get("points", 0.0) or 0.0), 1)
+        except Exception:
+            pts = 0.0
+        nfl_team = p.get("nfl_team") or ""
+        return {
+            "player_name": p.get("player_name") or "Player",
+            "points": pts,
+            "fantasy_team": p.get("fantasy_team") or "",
+            "nfl_team": nfl_team,
+            "nfl_logo": _nfl_logo_url(nfl_team),
+        }
+
+    rows: List[Dict[str, str]] = []
+    for pos in positions:
+        pool = [p for p in starters if matches_position(p, pos)]
+        if not pool:
+            rows.append({"position": pos, "boom": None, "bust": None})
+            continue
+        # Boom: max points; Bust: min points
+        boom_p = max(pool, key=lambda p: (p.get("points") or 0.0))
+        bust_p = min(pool, key=lambda p: (p.get("points") or 0.0))
+        rows.append({
+            "position": pos,
+            "boom": project(boom_p),
+            "bust": project(bust_p),
+        })
+    return rows
+
+
+def compute_weekly_awards(
+    scoreboard: List[Dict[str, Any]],
+    standings: List[Dict[str, Any]],
+    performances: List[Dict[str, Any]],
+) -> List[Dict[str, str]]:
+    """Compute a set of fun weekly awards based on the week results.
+
+    Returns a list of { title, text } entries suitable for display.
+    """
+    awards: List[Dict[str, str]] = []
+
+    # Helper maps
+    name_to_rank = {s.get("team_name"): s.get("rank") for s in standings}
+
+    # Manager of the Week: highest team score
+    best_name: str | None = None
+    best_score: float | None = None
+    for m in scoreboard:
+        for name, score in ((m.get("home_team"), m.get("home_score")), (m.get("away_team"), m.get("away_score"))):
+            try:
+                val = float(score)
+            except Exception:
+                val = None
+            if name and val is not None and (best_score is None or val > best_score):
+                best_name, best_score = name, val
+    if best_name is not None and best_score is not None:
+        awards.append({
+            "title": "Manager of the Week",
+            "text": f"{best_name} – {round(best_score,1)} points",
+        })
+
+    # Squeaker: lowest winning score
+    lowest_win_name: str | None = None
+    lowest_win_points: float | None = None
+    for m in scoreboard:
+        winner = m.get("winner")
+        if not winner:
+            continue
+        win_pts = m.get("home_score") if winner == m.get("home_team") else m.get("away_score")
+        try:
+            val = float(win_pts)
+        except Exception:
+            continue
+        if lowest_win_points is None or val < lowest_win_points:
+            lowest_win_points = val
+            lowest_win_name = winner
+    if lowest_win_name is not None and lowest_win_points is not None:
+        awards.append({
+            "title": "Squeaker",
+            "text": f"Lowest winning score: {lowest_win_name} – {round(lowest_win_points,1)}",
+        })
+
+    # Heartbreaker: closest loss
+    heartbreak_loser: str | None = None
+    heartbreak_winner: str | None = None
+    heartbreak_margin: float | None = None
+    for m in scoreboard:
+        winner = m.get("winner")
+        if not winner:
+            continue
+        margin = m.get("margin")
+        try:
+            mg = float(margin)
+        except Exception:
+            continue
+        # loser is the other team
+        loser = m.get("home_team") if winner == m.get("away_team") else m.get("away_team")
+        if heartbreak_margin is None or mg < heartbreak_margin:
+            heartbreak_margin = mg
+            heartbreak_loser = loser
+            heartbreak_winner = winner
+    if heartbreak_loser and heartbreak_winner and heartbreak_margin is not None:
+        awards.append({
+            "title": "Heartbreaker",
+            "text": f"{heartbreak_loser} lost to {heartbreak_winner} by {round(heartbreak_margin,1)}",
+        })
+
+    # Giant Killer: upset where winner had worse rank than opponent; take biggest rank delta
+    upset_winner: str | None = None
+    upset_loser: str | None = None
+    upset_delta: int | None = None
+    for m in scoreboard:
+        winner = m.get("winner")
+        if not winner:
+            continue
+        home = m.get("home_team")
+        away = m.get("away_team")
+        loser = away if winner == home else home
+        w_rank = name_to_rank.get(winner)
+        l_rank = name_to_rank.get(loser)
+        if isinstance(w_rank, int) and isinstance(l_rank, int) and w_rank > l_rank:
+            delta = w_rank - l_rank
+            if upset_delta is None or delta > upset_delta:
+                upset_delta = delta
+                upset_winner = winner
+                upset_loser = loser
+    if upset_winner and upset_loser and upset_delta is not None:
+        awards.append({
+            "title": "Giant Killer",
+            "text": f"{upset_winner} upset {upset_loser} (by ranking, +{upset_delta})",
+        })
+
+    # Bench Blunder: most total bench points
+    bench_points: Dict[str, float] = {}
+    for p in performances:
+        if not p.get("fantasy_team") or not p.get("is_bench"):
+            continue
+        try:
+            pts = float(p.get("points", 0.0))
+        except Exception:
+            pts = 0.0
+        bench_points[p["fantasy_team"]] = bench_points.get(p["fantasy_team"], 0.0) + pts
+    if bench_points:
+        team, total = max(bench_points.items(), key=lambda kv: kv[1])
+        awards.append({
+            "title": "Bench Blunder",
+            "text": f"{team} – {round(total,1)} points left on bench",
+        })
+
+    return awards
 
 
