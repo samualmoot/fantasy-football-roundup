@@ -21,3 +21,42 @@ def get_league(year=None):
         raise ValueError("Missing ESPN_SWID or ESPN_S2 environment variables.")
     league = League(league_id=league_id, year=year, swid=swid, espn_s2=espn_s2)
     return league
+
+
+def get_playoff_team_count(league: League) -> int:
+    """Best-effort detection of how many teams make the playoffs.
+
+    Tries common attribute names on `league.settings` used by ESPN and espn-api.
+    Falls back to a sensible default (6) clamped to the number of teams.
+    """
+    default_count = 6
+    settings = getattr(league, "settings", None)
+    if settings is not None:
+        # Try a handful of likely attribute names first (snake_case and camelCase)
+        candidate_attr_names = (
+            "playoff_team_count",
+            "playoffTeamCount",
+            "num_playoff_teams",
+            "numPlayoffTeams",
+        )
+        for name in candidate_attr_names:
+            try:
+                value = getattr(settings, name, None)
+                if isinstance(value, int) and value > 0:
+                    return value
+            except Exception:
+                pass
+
+        # Heuristic: search any attribute that looks like it might match
+        try:
+            for key, value in vars(settings).items():
+                if not isinstance(key, str):
+                    continue
+                lowered = key.lower()
+                if "playoff" in lowered and "team" in lowered and isinstance(value, int) and 2 <= value <= 20:
+                    return value
+        except Exception:
+            pass
+
+    team_count = len(getattr(league, "teams", []) or [])
+    return max(2, min(default_count, team_count or default_count))

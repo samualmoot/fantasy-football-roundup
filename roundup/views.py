@@ -2,8 +2,21 @@ from django.shortcuts import render
 from django.http import HttpRequest, HttpResponse, JsonResponse
 from django.utils.crypto import salted_hmac
 
-from .espn_utils import get_league
-from .services.espn_service import get_scoreboard, get_standings_with_movement, get_top_players, get_previous_standings, get_bottom_players
+from .espn_utils import get_league, get_playoff_team_count
+from .services.espn_service import (
+    get_scoreboard,
+    get_standings_with_movement,
+    get_top_players,
+    get_previous_standings,
+    get_bottom_players,
+    get_all_player_performances,
+)
+from .services.espn_service import _build_team_id_to_record  # internal helper for view formatting
+from .incentives import (
+    generate_weekly_incentive_schedule,
+    compute_incentive_winner,
+    describe_incentive_title,
+)
 from .services.report_builder import compute_incentives, build_prompt_inputs
 from .ai_client import (
     generate_weekly_narrative,
@@ -17,6 +30,7 @@ from .ai_jobs import ensure_job, get_job_result
 def weekly_report(request: HttpRequest, year: int, week: int) -> HttpResponse:
     league = get_league(year=year)
     league_name = getattr(getattr(league, "settings", None), "name", str(league.league_id))
+    playoff_team_count = get_playoff_team_count(league)
 
     # Boundaries for navigation
     first_week = getattr(league, "firstScoringPeriod", 1) or 1
@@ -28,9 +42,36 @@ def weekly_report(request: HttpRequest, year: int, week: int) -> HttpResponse:
 
     scoreboard = get_scoreboard(league, week)
     standings = get_standings_with_movement(league, week)
+    # Build mapping from team_id to record to enrich scoreboard display
+    id_to_record = _build_team_id_to_record(standings)
+    for m in scoreboard:
+        hid = m.get("home_id")
+        aid = m.get("away_id")
+        m["home_record"] = id_to_record.get(hid) if hid is not None else None
+        m["away_record"] = id_to_record.get(aid) if aid is not None else None
     incentives = compute_incentives(scoreboard)
     incentives["top_players"] = get_top_players(league, week, top_n=3)
     incentives["bottom_players"] = get_bottom_players(league, week, bottom_n=3)
+
+    # Determine regular season length and compute weekly incentive schedule
+    # ESPN settings commonly expose finalScoringPeriod as last week index
+    first_week = getattr(league, "firstScoringPeriod", 1) or 1
+    last_week = getattr(league, "finalScoringPeriod", 18) or 18
+    regular_season_weeks = max(1, last_week - first_week + 1)
+    schedule = generate_weekly_incentive_schedule(regular_season_weeks)
+    # Calculate index relative to first week
+    idx = min(max(0, week - first_week), len(schedule) - 1)
+    this_incentive_key = schedule[idx]
+    next_incentive_key = schedule[idx + 1] if idx + 1 < len(schedule) else schedule[0]
+
+    # Compute the winner depending on the incentive type
+    performances = get_all_player_performances(league, week)
+    incentive_result = compute_incentive_winner(
+        this_incentive_key,
+        scoreboard=scoreboard,
+        incentives_summary=incentives,
+        performances=performances,
+    )
 
     # Do NOT block on AI here; page should render immediately.
     # The narrative will be fetched asynchronously via a JSON endpoint.
@@ -39,6 +80,7 @@ def weekly_report(request: HttpRequest, year: int, week: int) -> HttpResponse:
         "league_name": league_name,
         "year": year,
         "week": week,
+        "playoff_team_count": playoff_team_count,
         "prev_week": prev_week,
         "next_week": next_week,
         "prev_disabled": prev_disabled,
@@ -46,6 +88,11 @@ def weekly_report(request: HttpRequest, year: int, week: int) -> HttpResponse:
         "scoreboard": scoreboard,
         "standings": standings,
         "incentives": incentives,
+        "weekly_incentive": {
+            "this_title": describe_incentive_title(this_incentive_key),
+            "winner_text": incentive_result.get("winner_text", ""),
+            "next_title": describe_incentive_title(next_incentive_key),
+        },
         "narrative": narrative,
     }
     return render(request, "roundup/report.html", context)

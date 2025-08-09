@@ -13,15 +13,21 @@
     h2 { margin: 0 0 8px; font-size: 18px; }
     ul { margin: 8px 0; padding-left: 18px; }
     table { width: 100%; border-collapse: collapse; }
-    th, td { padding: 6px 8px; border-bottom: 1px solid #eee; }
+    .scores { width: 100%; table-layout: fixed; }
+    th, td { padding: 6px 8px; border-bottom: 1px solid #eee; vertical-align: middle; }
     th { text-align: left; }
+    .standings tr.playoff { background: #eaf7ea; }
+    .standings tr.cutoff > td { border-bottom: 2px solid #b7dfb7; }
     .muted { color: #666; font-size: 13px; }
     .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
     .scores { font-variant-numeric: tabular-nums; }
     .team-cell { display: flex; align-items: center; gap: 8px; }
     .team-cell img { width: 22px; height: 22px; border-radius: 4px; object-fit: cover; background: #fff; border: 1px solid #ddd; }
-    .score-col { width: 70px; text-align: center; }
-    .vs-col { width: 32px; text-align: center; color: #999; }
+    .score-col { width: 120px; text-align: center; font-size: 28px; }
+    .vs-col { width: 40px; text-align: center; color: #999; }
+    .logo-col { width: 28px; text-align: center; }
+    .logo-img { width: 22px; height: 22px; border-radius: 4px; object-fit: cover; background: #fff; border: 1px solid #ddd; }
+    .name-col { width: auto; }
     .move { font-size: 12px; margin-left: 6px; }
     .move.up { color: #138a36; }
     .move.down { color: #c92a2a; }
@@ -65,32 +71,25 @@
     </section>
 
     <!-- Center: Weekly Scores (fills remaining height) -->
-    <section class="card" style="grid-column: 2; grid-row: 3; display: flex; flex-direction: column;">
+    <section class="card" id="scores-card" style="grid-column: 2; grid-row: 3; display: flex; flex-direction: column;">
       <h2 style="text-align:center;">Weekly Scores</h2>
-      <table class="scores">
-        <thead>
-          <tr>
-            <th>Home</th>
-            <th class="score-col">Score</th>
-            <th class="vs-col">vs</th>
-            <th class="score-col">Score</th>
-            <th>Away</th>
-          </tr>
-        </thead>
+      <table class="scores" id="scores-table">
         <tbody>
           {% for m in scoreboard %}
           <tr>
-            <td>
+            <td class="name-col">
               <div class="team-cell">
-                {% if m.home_logo %}<img src="{{ m.home_logo }}" alt="{{ m.home_team }} logo" />{% endif %}
-                <span>{{ m.home_team }}</span>
+                <span>{{ m.home_team }}{% if m.home_record %} <span class="muted">({{ m.home_record }})</span>{% endif %}</span>
               </div>
+            </td>
+            <td class="logo-col">
+              {% if m.home_logo %}<img class="logo-img" src="{{ m.home_logo }}" alt="{{ m.home_team }} logo" />{% endif %}
             </td>
             <td class="score-col">
               {% if m.winner == m.home_team %}
                 <strong>{{ m.home_score }}</strong>
               {% else %}
-                {{ m.home_score }}
+                <span>{{ m.home_score }}</span>
               {% endif %}
             </td>
             <td class="vs-col">vs</td>
@@ -98,13 +97,15 @@
               {% if m.winner == m.away_team %}
                 <strong>{{ m.away_score }}</strong>
               {% else %}
-                {{ m.away_score }}
+                <span>{{ m.away_score }}</span>
               {% endif %}
             </td>
-            <td>
+            <td class="logo-col">
+              {% if m.away_logo %}<img class="logo-img" src="{{ m.away_logo }}" alt="{{ m.away_team }} logo" />{% endif %}
+            </td>
+            <td class="name-col">
               <div class="team-cell">
-                <span>{{ m.away_team }}</span>
-                {% if m.away_logo %}<img src="{{ m.away_logo }}" alt="{{ m.away_team }} logo" />{% endif %}
+                <span>{{ m.away_team }}{% if m.away_record %} <span class="muted">({{ m.away_record }})</span>{% endif %}</span>
               </div>
             </td>
           </tr>
@@ -116,14 +117,18 @@
     <!-- Left: Weekly Incentive Winner + Top NFL performers -->
     <aside class="card" style="grid-column: 1; grid-row: 3;">
       <h2>Weekly Incentive Winner</h2>
-      <p>
-        {% if incentives.highest_score %}
-          <strong>Highest Score:</strong>
-          {{ incentives.highest_score.winner }} ({{ incentives.highest_score.winner_score }})
-        {% else %}
-          <span class="muted">No data.</span>
-        {% endif %}
-      </p>
+      <div style="margin-bottom:10px;">
+        <div class="muted">This week's incentive</div>
+        <div><strong>{{ weekly_incentive.this_title }}</strong></div>
+      </div>
+      <div style="margin-bottom:10px;">
+        <div class="muted">Winner</div>
+        <div>{% if weekly_incentive.winner_text %}{{ weekly_incentive.winner_text }}{% else %}<span class="muted">TBD</span>{% endif %}</div>
+      </div>
+      <div>
+        <div class="muted">Next week's incentive</div>
+        <div>{{ weekly_incentive.next_title }}</div>
+      </div>
       <hr/>
       <h3 style="margin-top:8px;">Top NFL Performers</h3>
       <ul>
@@ -147,13 +152,13 @@
     <!-- Right: Standings -->
     <aside class="card" style="grid-column: 3; grid-row: 3;">
       <h2>Standings</h2>
-      <table>
+      <table class="standings">
         <thead>
           <tr><th>Team</th><th>W-L-T</th><th>PF</th></tr>
         </thead>
         <tbody>
           {% for t in standings %}
-          <tr>
+          <tr class="{% if t.rank <= playoff_team_count %}playoff {% endif %}{% if t.rank == playoff_team_count %}cutoff{% endif %}">
             <td>
               <span>{{ t.team_name }}</span>
               {% if t.movement_abs %}
@@ -170,6 +175,7 @@
           {% endfor %}
         </tbody>
       </table>
+      <div class="muted" style="margin-top:6px;">Top {{ playoff_team_count }} highlighted as current playoff positions.</div>
     </aside>
     
   </div>
@@ -210,6 +216,26 @@
       }, () => {
         showError('overview', 'overview-spinner', 'Overview is taking longer than usual…');
       });
+
+      function sizeWeeklyScores() {
+        const card = document.getElementById('scores-card');
+        const table = document.getElementById('scores-table');
+        if (!card || !table) return;
+        // Compute available height beneath the header inside the card
+        const cardRect = card.getBoundingClientRect();
+        const tableRect = table.getBoundingClientRect();
+        const available = Math.max(0, cardRect.height - (tableRect.top - cardRect.top) - 8);
+        table.style.height = available + 'px';
+
+        const rows = table.querySelectorAll('tbody > tr');
+        if (rows.length > 0) {
+          const per = Math.max(48, Math.floor(available / rows.length));
+          rows.forEach(r => { r.style.height = per + 'px'; });
+        }
+      }
+      window.addEventListener('resize', sizeWeeklyScores);
+      // Defer to next frame so layout is stable
+      requestAnimationFrame(sizeWeeklyScores);
     })();
   </script>
 </body>

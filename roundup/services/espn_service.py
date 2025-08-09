@@ -26,8 +26,10 @@ def get_scoreboard(league: League, week: int) -> List[Dict[str, Any]]:
     for b in box_scores:
         home_team_obj = getattr(b, "home_team", None)
         away_team_obj = getattr(b, "away_team", None)
-        home_name = getattr(home_team_obj, "team_name", str(getattr(home_team_obj, "team_id", "Home")))
-        away_name = getattr(away_team_obj, "team_name", str(getattr(away_team_obj, "team_id", "Away")))
+        home_id = getattr(home_team_obj, "team_id", None)
+        away_id = getattr(away_team_obj, "team_id", None)
+        home_name = getattr(home_team_obj, "team_name", str(home_id if home_id is not None else "Home"))
+        away_name = getattr(away_team_obj, "team_name", str(away_id if away_id is not None else "Away"))
         home_logo = getattr(home_team_obj, "logo_url", None)
         away_logo = getattr(away_team_obj, "logo_url", None)
         home_score = getattr(b, "home_score", 0.0)
@@ -43,12 +45,16 @@ def get_scoreboard(league: League, week: int) -> List[Dict[str, Any]]:
         if hs == 0.0 and as_ > 0.0:
             home_name = "Bye"
             home_logo = None
+            home_id = None
         elif as_ == 0.0 and hs > 0.0:
             away_name = "Bye"
             away_logo = None
+            away_id = None
 
         diff = (hs - as_) if isinstance(hs, (int, float)) and isinstance(as_, (int, float)) else 0.0
         matchups.append({
+            "home_id": home_id,
+            "away_id": away_id,
             "home_team": home_name,
             "away_team": away_name,
             "home_logo": home_logo,
@@ -131,6 +137,21 @@ def _compute_standings_through_week(league: League, through_week: int) -> List[D
     return standings
 
 
+def _format_record(wins: int, losses: int, ties: int) -> str:
+    if ties and ties > 0:
+        return f"{wins}-{losses}-{ties}"
+    return f"{wins}-{losses}"
+
+
+def _build_team_id_to_record(standings: List[Dict[str, Any]]) -> Dict[int, str]:
+    mapping: Dict[int, str] = {}
+    for s in standings:
+        tid = s.get("team_id")
+        if isinstance(tid, int):
+            mapping[tid] = _format_record(int(s.get("wins", 0)), int(s.get("losses", 0)), int(s.get("ties", 0)))
+    return mapping
+
+
 def get_standings_with_movement(league: League, week: int) -> List[Dict[str, Any]]:
     """Return current standings and movement delta vs previous week.
     movement > 0 means moved up that many places; < 0 moved down; None for week 1.
@@ -203,6 +224,46 @@ def get_top_players(league: League, week: int, top_n: int = 3) -> List[Dict[str,
 
     players.sort(key=lambda x: x.get("points", 0.0), reverse=True)
     return players[:max(0, top_n)]
+
+
+def get_all_player_performances(league: League, week: int) -> List[Dict[str, Any]]:
+    """Return all player performances for the week with starter/bench flag.
+
+    Each entry: player_name, position, nfl_team, points, fantasy_team, is_bench (bool)
+    """
+    players: List[Dict[str, Any]] = []
+    box_scores = _get_cached_box_scores(league, week)
+
+    def add_lineup(lineup, fantasy_team_name: str):
+        for pl in lineup or []:
+            try:
+                points = float(getattr(pl, "points", 0.0) or 0.0)
+            except Exception:
+                points = 0.0
+            slot = getattr(pl, "slot_position", None)
+            # Treat bench/IR as bench
+            is_bench = isinstance(slot, str) and slot.upper() in {"BE", "IR", "IR-R", "OUT", "RES"}
+            name = getattr(pl, "name", getattr(pl, "playerName", "Player"))
+            position = getattr(pl, "position", None)
+            nfl_team = getattr(pl, "proTeam", getattr(pl, "proTeamAbbreviation", None))
+            players.append({
+                "player_name": name,
+                "position": position,
+                "nfl_team": nfl_team,
+                "points": round(points, 1),
+                "fantasy_team": fantasy_team_name,
+                "is_bench": is_bench,
+            })
+
+    for b in box_scores:
+        home_team_obj = getattr(b, "home_team", None)
+        away_team_obj = getattr(b, "away_team", None)
+        home_name = getattr(home_team_obj, "team_name", str(getattr(home_team_obj, "team_id", "Home")))
+        away_name = getattr(away_team_obj, "team_name", str(getattr(away_team_obj, "team_id", "Away")))
+        add_lineup(getattr(b, "home_lineup", []), home_name)
+        add_lineup(getattr(b, "away_lineup", []), away_name)
+
+    return players
 
 # Function to clear cache if needed
 def clear_box_score_cache():
