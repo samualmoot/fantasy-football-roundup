@@ -51,6 +51,24 @@ def _get_client_and_model():
         raise ValueError(f"Unsupported LLM_PROVIDER: {provider}")
 
 
+def _sanitize_overview(text: str) -> str:
+    """Remove boilerplate prefaces like "Here's a short overview..." or "Overview:" and return concise text."""
+    import re
+    if not text:
+        return text
+    cleaned = text.strip().strip('"').strip()
+    # Remove leading 'Overview:' or 'Summary:' labels (case-insensitive)
+    cleaned = re.sub(r"^(?i)(overview|summary)\s*:\s*", "", cleaned, count=1)
+    # Remove common prefaces like "Here's/Here is a (short|quick) (overview|summary) ...:"
+    cleaned = re.sub(
+        r"^(?i)(here(?:'|’)s|here is)\s+(?:a\s+)?(?:short\s+|quick\s+)?(?:overview|summary)(?:\s+of[^:]*?)?:\s*",
+        "",
+        cleaned,
+        count=1,
+    )
+    return cleaned.strip()
+
+
 def generate_weekly_narrative(prompt_inputs: Dict[str, Any]) -> Dict[str, str]:
     """
     Generate short, consistent narrative sections as JSON using an LLM.
@@ -75,6 +93,7 @@ def generate_weekly_narrative(prompt_inputs: Dict[str, Any]) -> Dict[str, str]:
         "Tone: informative, light-hearted, conversational. "
         "Notice close games (margins < 5), first wins after a drought, and undefeated teams. "
         "You may mention one standout NFL player if provided. "
+        "Start directly with the content; do not include prefaces like 'Here's...' or labels like 'Overview:'. "
         "Output JSON only. Keep overview under 60 words."
     )
 
@@ -139,10 +158,13 @@ def generate_weekly_narrative(prompt_inputs: Dict[str, Any]) -> Dict[str, str]:
                         data[key] = "; ".join(str(item) for item in data[key])
                 else:
                     data[key] = str(data[key])
+        # Sanitize overview phrasing
+        if data.get("overview"):
+            data["overview"] = _sanitize_overview(data["overview"])
         return data
     except Exception:
         return {
-            "overview": content[:500] if content else "",
+            "overview": _sanitize_overview(content[:500]) if content else "",
             "storylines": "",
             "matchup_highlights": "",
             "standings_blurb": "",
@@ -190,7 +212,8 @@ def generate_overview(prompt_inputs: Dict[str, Any]) -> str:
     }
     system = (
         "Return ONLY a short overview (max 50-60 words). Tone: informative, light-hearted. "
-        "Highlight close games, wins if they havn't won in the last 3, or undefeated teams if present. Optionally mention one standout player."
+        "Highlight close games, wins if they havn't won in the last 3, or undefeated teams if present. Optionally mention one standout player. "
+        "Start directly with the content; no prefaces like 'Here's...' and no labels like 'Overview:'."
     )
     text = _chat_once(system, payload, max_tokens=80)
     # Ensure plain text
@@ -198,10 +221,10 @@ def generate_overview(prompt_inputs: Dict[str, Any]) -> str:
         # Some models might return JSON; normalize to string
         obj = json.loads(text)
         if isinstance(obj, dict) and "overview" in obj:
-            return str(obj.get("overview", ""))
+            return _sanitize_overview(str(obj.get("overview", "")))
     except Exception:
         pass
-    return text.strip()
+    return _sanitize_overview(text.strip())
 
 
 def generate_storylines(prompt_inputs: Dict[str, Any]) -> str:
