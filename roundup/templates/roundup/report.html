@@ -1,3 +1,4 @@
+{% load report_extras %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -131,22 +132,44 @@
       </div>
       <hr/>
       <h3 style="margin-top:8px;">Top NFL Performers</h3>
-      <ul>
-        {% for p in incentives.top_players %}
-          <li>{{ p.player_name }} ({{ p.position }}, {{ p.nfl_team }}) – {{ p.points }} pts for {{ p.fantasy_team }}</li>
-        {% empty %}
-          <li class="muted">No player data available.</li>
+      <div class="two-col">
+        {% for pos in positions %}
+          <div>
+            <strong>{{ pos }}</strong>
+            <ul>
+              {% with leader=position_leaders|get_item:pos %}
+                {% if leader and leader.best and leader.best.0 %}
+                  {% with p=leader.best.0 %}
+                    <li>{{ p.player_name }} – {{ p.points }} pts ({{ p.position }}, {{ p.nfl_team }})</li>
+                  {% endwith %}
+                {% else %}
+                  <li class="muted">—</li>
+                {% endif %}
+              {% endwith %}
+            </ul>
+          </div>
         {% endfor %}
-      </ul>
+      </div>
 
       <h3 style="margin-top:8px;">Top NFL Busts</h3>
-      <ul>
-        {% for p in incentives.bottom_players %}
-          <li>{{ p.player_name }} ({{ p.position }}, {{ p.nfl_team }}) – {{ p.points }} pts for {{ p.fantasy_team }}</li>
-        {% empty %}
-          <li class="muted">No player data available.</li>
+      <div class="two-col">
+        {% for pos in positions %}
+          <div>
+            <strong>{{ pos }}</strong>
+            <ul>
+              {% with leader=position_leaders|get_item:pos %}
+                {% if leader and leader.busts and leader.busts.0 %}
+                  {% with p=leader.busts.0 %}
+                    <li>{{ p.player_name }} – {{ p.points }} pts ({{ p.position }}, {{ p.nfl_team }})</li>
+                  {% endwith %}
+                {% else %}
+                  <li class="muted">—</li>
+                {% endif %}
+              {% endwith %}
+            </ul>
+          </div>
         {% endfor %}
-      </ul>
+      </div>
     </aside>
 
     <!-- Right: Standings -->

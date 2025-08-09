@@ -265,6 +265,54 @@ def get_all_player_performances(league: League, week: int) -> List[Dict[str, Any
 
     return players
 
+
+def compute_position_leaders(
+    performances: List[Dict[str, Any]],
+    *,
+    top_n: int = 1,
+    bottom_n: int = 1,
+    include_positions: List[str] | None = None,
+) -> Dict[str, Dict[str, List[Dict[str, Any]]]]:
+    """Compute best and worst starters by position.
+
+    Returns mapping like:
+      {
+        'QB': { 'best': [..top_n..], 'busts': [..bottom_n..] },
+        ...
+      }
+    """
+    # Normalize desired positions
+    desired = include_positions or ["QB", "RB", "WR", "TE", "K", "DEF"]
+
+    def norm_pos(p: Any) -> str | None:
+        if not p:
+            return None
+        s = str(p).upper().strip()
+        if s in {"DEF", "DST", "D/ST", "D-ST", "D ST"}:
+            return "DEF"
+        if s in {"QB", "RB", "WR", "TE", "K"}:
+            return s
+        return None
+
+    # Group starters by normalized position
+    grouped: Dict[str, List[Dict[str, Any]]] = {pos: [] for pos in desired}
+    for pl in performances:
+        if pl.get("is_bench"):
+            continue
+        pos = norm_pos(pl.get("position"))
+        if pos and pos in grouped:
+            grouped[pos].append(pl)
+
+    leaders: Dict[str, Dict[str, List[Dict[str, Any]]]] = {}
+    for pos in desired:
+        lst = grouped.get(pos, [])
+        # Sort copies to avoid mutating original
+        best = sorted(lst, key=lambda x: x.get("points", 0.0), reverse=True)[: max(0, top_n)]
+        busts = sorted(lst, key=lambda x: x.get("points", 0.0))[: max(0, bottom_n)]
+        leaders[pos] = {"best": best, "busts": busts}
+
+    return leaders
+
 # Function to clear cache if needed
 def clear_box_score_cache():
     """Clear the box score cache. Useful for testing or when data might be stale."""

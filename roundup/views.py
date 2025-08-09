@@ -10,6 +10,7 @@ from .services.espn_service import (
     get_previous_standings,
     get_bottom_players,
     get_all_player_performances,
+    compute_position_leaders,
 )
 from .services.espn_service import _build_team_id_to_record  # internal helper for view formatting
 from .incentives import (
@@ -72,6 +73,8 @@ def weekly_report(request: HttpRequest, year: int, week: int) -> HttpResponse:
         incentives_summary=incentives,
         performances=performances,
     )
+    # Position leaders/busts
+    position_leaders = compute_position_leaders(performances, top_n=1, bottom_n=1)
 
     # Do NOT block on AI here; page should render immediately.
     # The narrative will be fetched asynchronously via a JSON endpoint.
@@ -88,6 +91,8 @@ def weekly_report(request: HttpRequest, year: int, week: int) -> HttpResponse:
         "scoreboard": scoreboard,
         "standings": standings,
         "incentives": incentives,
+        "position_leaders": position_leaders,
+        "positions": ["QB", "RB", "WR", "TE", "K", "DEF"],
         "weekly_incentive": {
             "this_title": describe_incentive_title(this_incentive_key),
             "winner_text": incentive_result.get("winner_text", ""),
