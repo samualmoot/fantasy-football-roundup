@@ -6,29 +6,41 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>{{ league_name }} – Week {{ week }} Roundup</title>
   <style>
-    body { font-family: Arial, sans-serif; margin: 0; padding: 16px; color: #111; }
-    .grid { display: grid; grid-template-columns: 1fr 2.5fr 1fr; grid-template-rows: auto auto 1fr; gap: 16px; min-height: 100vh; }
+    body { font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, Helvetica Neue, Arial; margin: 0; padding: 16px; color: #0f172a; background: #f6f8fb; }
+    .grid { display: grid; grid-template-columns: 1fr 2.3fr 1.2fr; grid-template-rows: auto auto 1fr; gap: 16px; min-height: 100vh; }
     header { grid-column: 1 / -1; display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
-    .card { background: #fafafa; border: 1px solid #e5e5e5; border-radius: 8px; padding: 12px 14px; }
-    h1 { margin: 0; font-size: 22px; }
-    h2 { margin: 0 0 8px; font-size: 18px; }
+    .card { background: #ffffff; border: 1px solid #e6e9ef; border-radius: 12px; padding: 14px 16px; box-shadow: 0 1px 2px rgba(15,23,42,0.04); }
+    .banner { background: linear-gradient(135deg, #2563eb, #7c3aed); color: #fff; border: none; box-shadow: 0 10px 20px rgba(37,99,235,0.15); }
+    h1 { margin: 0; font-size: 24px; font-weight: 700; }
+    h2 { margin: 0 0 10px; font-size: 18px; font-weight: 700; }
     ul { margin: 8px 0; padding-left: 18px; }
     table { width: 100%; border-collapse: collapse; }
-    .scores { width: 100%; table-layout: fixed; }
-    th, td { padding: 6px 8px; border-bottom: 1px solid #eee; vertical-align: middle; }
-    th { text-align: left; }
-    .standings tr.playoff { background: #eaf7ea; }
-    .standings tr.cutoff > td { border-bottom: 2px solid #b7dfb7; }
-    .muted { color: #666; font-size: 13px; }
+    .scores { width: 100%; table-layout: fixed; font-variant-numeric: tabular-nums; }
+    th, td { padding: 10px 10px; border-bottom: 1px solid #e6e9ef; vertical-align: middle; }
+    th { text-align: left; color: #64748b; font-weight: 600; font-size: 13px; text-transform: uppercase; letter-spacing: .02em; }
+    tbody tr:nth-child(odd) { background: #f9fafb; }
+    tbody tr.close { background: #fff7ed; }
+    .standings { table-layout: fixed; }
+    .standings tr.playoff { background: #ecfdf5; }
+    .standings tr.cutoff > td { border-bottom: 2px solid #34d399; }
+    .standings th, .standings td { white-space: nowrap; }
+    .standings th:nth-child(2), .standings td:nth-child(2) { width: 88px; text-align: center; }
+    .standings th:nth-child(3), .standings td:nth-child(3) { width: 84px; text-align: right; }
+    /* Match font size across team, record, and PF */
+    .standings td:nth-child(2), .standings td:nth-child(3) { font-size: 14px; line-height: 1.25; }
+    /* Allow team names to wrap while keeping Record/PF fixed */
+    .standings td:first-child { white-space: normal; overflow: visible; text-overflow: initial; font-size: 14px; line-height: 1.25; }
+    .muted { color: #64748b; font-size: 13px; }
     .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-    .scores { font-variant-numeric: tabular-nums; }
     .team-cell { display: flex; align-items: center; gap: 8px; }
-    .team-cell img { width: 22px; height: 22px; border-radius: 4px; object-fit: cover; background: #fff; border: 1px solid #ddd; }
+    .team-cell img { width: 22px; height: 22px; border-radius: 6px; object-fit: cover; background: #fff; border: 1px solid #e6e9ef; }
     .score-col { width: 120px; text-align: center; font-size: 28px; }
-    .vs-col { width: 40px; text-align: center; color: #999; }
+    .score-col strong { color: #16a34a; text-shadow: 0 1px 0 rgba(16,185,129,0.2); }
+    .vs-col { width: 40px; text-align: center; color: #64748b; font-weight: 600; }
     .logo-col { width: 28px; text-align: center; }
-    .logo-img { width: 22px; height: 22px; border-radius: 4px; object-fit: cover; background: #fff; border: 1px solid #ddd; }
-    .name-col { width: auto; }
+    .logo-img { width: 22px; height: 22px; border-radius: 6px; object-fit: cover; background: #fff; border: 1px solid #e6e9ef; }
+    .name-col { width: auto; font-weight: 600; }
+    .pill { display: inline-block; padding: 2px 8px; border-radius: 999px; background: #eef2ff; color: #3730a3; font-size: 12px; font-weight: 600; }
     .move { font-size: 12px; margin-left: 6px; }
     .move.up { color: #138a36; }
     .move.down { color: #c92a2a; }
@@ -51,6 +63,13 @@
     .bb-name-text strong { font-size: 13px; font-weight: 700; }
     .bb-sub { font-size: 11px !important; }
     .section-divider { border-top: 2px solid #e0e0e0; margin: 10px 0 12px; }
+    /* Awards styling */
+    .awards { list-style: none; padding: 0; margin: 0; display: grid; grid-template-columns: 1fr; gap: 8px; }
+    .award { display: flex; align-items: flex-start; gap: 10px; border: 1px solid #e5e5e5; background: #f9fafb; border-radius: 10px; padding: 10px 12px; }
+    .award-icon { width: 28px; height: 28px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 14px; background: #eef2ff; color: #3730a3; font-weight: 700; flex-shrink: 0; }
+    .award-body { display: grid; gap: 2px; }
+    .award-title { font-weight: 700; font-size: 14px; }
+    .award-text { font-size: 13px; color: #666; }
   </style>
 </head>
 <body>
@@ -149,7 +168,7 @@
                     <div style="display:flex; align-items:center; gap:8px;">
                       <div>
                         <div class="bb-name-text"><strong>{{ row.boom.player_name }}</strong></div>
-                        <div class="muted bb-sub">{{ row.boom.nfl_team }} for {{ row.boom.fantasy_team }}</div>
+                        <div class="muted bb-sub">{{ row.boom.fantasy_team }}</div>
                       </div>
                       {% if row.boom.nfl_logo %}<img class="bb-logo" src="{{ row.boom.nfl_logo }}" alt="{{ row.boom.nfl_team }} logo" />{% endif %}
                     </div>
@@ -165,7 +184,7 @@
                       {% if row.bust.nfl_logo %}<img class="bb-logo" src="{{ row.bust.nfl_logo }}" alt="{{ row.bust.nfl_team }} logo" />{% endif %}
                       <div>
                         <div class="bb-name-text"><strong>{{ row.bust.player_name }}</strong></div>
-                        <div class="muted bb-sub">{{ row.bust.nfl_team }} for {{ row.bust.fantasy_team }}</div>
+                        <div class="muted bb-sub">{{ row.bust.fantasy_team }}</div>
                       </div>
                     </div>
                   {% else %}
@@ -182,11 +201,17 @@
       <div class="section-divider"></div>
       <div>
         <h2>Awards of the Week</h2>
-        <ul>
+        <ul class="awards">
           {% for a in awards %}
-            <li><strong>{{ a.title }}:</strong> {{ a.text }}</li>
+            <li class="award">
+              <span class="award-icon">🏆</span>
+              <div class="award-body">
+                <div class="award-title">{{ a.title }}</div>
+                <div class="award-text">{{ a.text }}</div>
+              </div>
+            </li>
           {% empty %}
-            <li class="muted">No awards available.</li>
+            <li class="muted" style="padding: 6px 0;">No awards available.</li>
           {% endfor %}
         </ul>
       </div>
