@@ -10,26 +10,8 @@ except ImportError:  # Optional dependency
 
 
 def _get_client_and_model():
-    provider = os.environ.get("LLM_PROVIDER", "groq").lower()
-    if provider == "groq":
-        if OpenAI is None:
-            raise RuntimeError("openai package not installed. Run: pip install openai")
-        api_key = os.environ.get("GROQ_API_KEY")
-        if not api_key:
-            raise ValueError("Missing GROQ_API_KEY environment variable.")
-        client = OpenAI(api_key=api_key, base_url="https://api.groq.com/openai/v1")
-        model = os.environ.get("LLM_MODEL", "llama-3.1-8b-instant")
-        return client, model
-    elif provider == "openai":
-        if OpenAI is None:
-            raise RuntimeError("openai package not installed. Run: pip install openai")
-        api_key = os.environ.get("OPENAI_API_KEY")
-        if not api_key:
-            raise ValueError("Missing OPENAI_API_KEY environment variable.")
-        client = OpenAI(api_key=api_key)
-        model = os.environ.get("LLM_MODEL", "gpt-4o-mini")
-        return client, model
-    elif provider == "ollama":
+    provider = os.environ.get("LLM_PROVIDER", "ollama").lower()
+    if provider == "ollama":
         if OpenAI is None:
             raise RuntimeError("openai package not installed. Run: pip install openai")
         base_url = os.environ.get("OLLAMA_BASE_URL", "http://localhost:11434/v1")
@@ -94,7 +76,7 @@ def generate_weekly_narrative(prompt_inputs: Dict[str, Any]) -> Dict[str, str]:
         "Notice close games (margins < 5), first wins after a drought, and undefeated teams. "
         "You may mention one standout NFL player if provided. "
         "Start directly with the content; do not include prefaces like 'Here's...' or labels like 'Overview:'. "
-        "Output JSON only. Keep overview under 60 words."
+        "Output JSON only. Keep overview under 100 words."
     )
 
     user_prompt = (

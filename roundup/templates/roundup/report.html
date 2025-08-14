@@ -32,7 +32,8 @@
     .standings td:first-child { white-space: normal; overflow: visible; text-overflow: initial; font-size: 14px; line-height: 1.25; }
     .muted { color: #64748b; font-size: 13px; }
     .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-    .team-cell { display: flex; align-items: center; gap: 8px; }
+    .team-cell-home { display: flex; align-items: center; gap: 8px; justify-content: flex-end; }
+    .team-cell-away { display: flex; align-items: center; gap: 8px; justify-content: flex-start; }
     .team-cell img { width: 22px; height: 22px; border-radius: 6px; object-fit: cover; background: #fff; border: 1px solid #e6e9ef; }
     .score-col { width: 120px; text-align: center; font-size: 28px; }
     .score-col strong { color: #16a34a; text-shadow: 0 1px 0 rgba(16,185,129,0.2); }
@@ -77,7 +78,6 @@
     <header>
       <div>
         <h1>{{ league_name }} – Week {{ week }} Roundup</h1>
-        <div class="muted">Consistent layout: scores (top-right), incentives (bottom-left)</div>
       </div>
       <div class="nav">
         {% if prev_disabled %}
@@ -109,12 +109,9 @@
           {% for m in scoreboard %}
           <tr>
             <td class="name-col">
-              <div class="team-cell">
+              <div class="team-cell-home">
                 <span>{{ m.home_team }}{% if m.home_record %} <span class="muted">({{ m.home_record }})</span>{% endif %}</span>
               </div>
-            </td>
-            <td class="logo-col">
-              {% if m.home_logo %}<img class="logo-img" src="{{ m.home_logo }}" alt="{{ m.home_team }} logo" />{% endif %}
             </td>
             <td class="score-col">
               {% if m.winner == m.home_team %}
@@ -131,11 +128,8 @@
                 <span>{{ m.away_score }}</span>
               {% endif %}
             </td>
-            <td class="logo-col">
-              {% if m.away_logo %}<img class="logo-img" src="{{ m.away_logo }}" alt="{{ m.away_team }} logo" />{% endif %}
-            </td>
             <td class="name-col">
-              <div class="team-cell">
+              <div class="team-cell-away">
                 <span>{{ m.away_team }}{% if m.away_record %} <span class="muted">({{ m.away_record }})</span>{% endif %}</span>
               </div>
             </td>
@@ -147,7 +141,7 @@
 
     <!-- Left: Booms/Busts (full-height) -->
     <aside class="card" style="grid-column: 1; grid-row: 3;">
-      <h2>Booms &amp; Busts by Position</h2>
+      <h2>Top Booms &amp; Busts by Position</h2>
       <div class="table-scroll">
           <table class="table-sticky bb-table">
           <thead>
@@ -253,11 +247,11 @@
         </div>
         <div style="margin-bottom:10px;">
           <div class="muted">Winner</div>
-          <div>{% if weekly_incentive.winner_text %}{{ weekly_incentive.winner_text }}{% else %}<span class="muted">TBD</span>{% endif %}</div>
+          <div><strong>{% if weekly_incentive.winner_text %}{{ weekly_incentive.winner_text }}{% else %}<span class="muted">TBD</span>{% endif %}</strong></div>
         </div>
         <div>
           <div class="muted">Next week's incentive</div>
-          <div>{{ weekly_incentive.next_title }}</div>
+          <div><strong>{{ weekly_incentive.next_title }}</strong></div>
         </div>
       </div>
     </aside>
