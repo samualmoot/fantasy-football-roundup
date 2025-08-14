@@ -40,13 +40,14 @@ def _sanitize_overview(text: str) -> str:
         return text
     cleaned = text.strip().strip('"').strip()
     # Remove leading 'Overview:' or 'Summary:' labels (case-insensitive)
-    cleaned = re.sub(r"^(?i)(overview|summary)\s*:\s*", "", cleaned, count=1)
+    cleaned = re.sub(r"^(?i)(overview|summary)\s*:\s*", "", cleaned, count=1, flags=re.IGNORECASE)
     # Remove common prefaces like "Here's/Here is a (short|quick) (overview|summary) ...:"
     cleaned = re.sub(
         r"^(?i)(here(?:'|’)s|here is)\s+(?:a\s+)?(?:short\s+|quick\s+)?(?:overview|summary)(?:\s+of[^:]*?)?:\s*",
         "",
         cleaned,
         count=1,
+        flags=re.IGNORECASE
     )
     return cleaned.strip()
 
