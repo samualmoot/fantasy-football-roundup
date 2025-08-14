@@ -1,4 +1,4 @@
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 from django.http import HttpRequest, HttpResponse, JsonResponse
 from django.utils.crypto import salted_hmac
 
@@ -29,6 +29,9 @@ from .ai_client import (
 )
 from .ai_jobs import ensure_job, get_job_result
 
+
+def homepage(request):
+    return redirect('weekly_report', year=2025, week=1)
 
 def weekly_report(request: HttpRequest, year: int, week: int) -> HttpResponse:
     league = get_league(year=year)
