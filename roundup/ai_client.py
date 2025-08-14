@@ -36,20 +36,32 @@ def _get_client_and_model():
 def _sanitize_overview(text: str) -> str:
     """Remove boilerplate prefaces like "Here's a short overview..." or "Overview:" and return concise text."""
     import re
+
     if not text:
         return text
+
     cleaned = text.strip().strip('"').strip()
+
     # Remove leading 'Overview:' or 'Summary:' labels (case-insensitive)
-    cleaned = re.sub(r"^(?i)(overview|summary)\s*:\s*", "", cleaned, count=1, flags=re.IGNORECASE)
-    # Remove common prefaces like "Here's/Here is a (short|quick) (overview|summary) ...:"
     cleaned = re.sub(
-        r"^(?i)(here(?:'|’)s|here is)\s+(?:a\s+)?(?:short\s+|quick\s+)?(?:overview|summary)(?:\s+of[^:]*?)?:\s*",
+        r"^(overview|summary)\s*:\s*",
         "",
         cleaned,
         count=1,
         flags=re.IGNORECASE
     )
+
+    # Remove common prefaces like "Here's/Here is a (short|quick) (overview|summary) ...:"
+    cleaned = re.sub(
+        r"^(here(?:'|’)s|here is)\s+(?:a\s+)?(?:short\s+|quick\s+)?(?:overview|summary)(?:\s+of[^:]*?)?:\s*",
+        "",
+        cleaned,
+        count=1,
+        flags=re.IGNORECASE
+    )
+
     return cleaned.strip()
+
 
 
 def generate_weekly_narrative(prompt_inputs: Dict[str, Any]) -> Dict[str, str]:
