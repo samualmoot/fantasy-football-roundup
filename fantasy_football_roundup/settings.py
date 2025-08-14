@@ -25,7 +25,8 @@ SECRET_KEY = 'django-insecure-0@)$f7^71mj4v5q%+a9b==^7p8a^%#(b9u=j=8+-yb=l)e&9by
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ["thegarittybowl.com", "fantasy_football_roundup.onrender.com"]
+CSRF_TRUSTED_ORIGINS = ["https://thegarittybowl.com", "https://fantasy_football_roundup.onrender.com"]
 
 
 # Application definition
