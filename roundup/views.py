@@ -49,9 +49,9 @@ def homepage(request):
         'current_year': current_year,
         'default_week': default_week,
         'standings': standings,
-        # Prize placeholders; replace with your real values or surface via settings
-        'grand_prize': 0,
-        'weekly_prize': 0,
+        # Prizes
+        'grand_prize': 250,
+        'weekly_prize': 8,
     }
     return render(request, "roundup/homepage.html", context)
 

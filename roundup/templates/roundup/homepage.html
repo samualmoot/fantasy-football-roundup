@@ -110,8 +110,17 @@
     .players-intro { text-align: center; margin: 16px 0; }
     .players-intro .count { font-size: 1.75rem; font-weight: 900; color: var(--gray-800); }
     .players-intro .champion { font-size: 1.25rem; font-weight: 800; color: var(--gray-700); margin-top: 6px; }
-    .players-outro { text-align: center; margin: 20px 0; }
-    .players-outro .champion { font-size: 1.25rem; font-weight: 800; color: var(--gray-700); margin: 8px 0; }
+    .players-outro { text-align: center; margin: 24px 0; }
+    .players-outro .champion { 
+      font-size: 2rem; 
+      font-weight: 900; 
+      letter-spacing: -0.02em; 
+      background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+      -webkit-background-clip: text; 
+      -webkit-text-fill-color: transparent; 
+      background-clip: text; 
+      margin: 8px 0 6px; 
+    }
     .players-grid { 
       display: grid; 
       grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); 
