@@ -31,7 +31,20 @@ from .ai_jobs import ensure_job, get_job_result
 
 
 def homepage(request):
-    return redirect('weekly_report', year=2025, week=1)
+    # Get current year and week for navigation
+    from datetime import datetime
+    current_date = datetime.now()
+    current_year = current_date.year
+    
+    # For now, default to week 1 of current year
+    # In the future, this could show the most recent week or current week
+    default_week = 1
+    
+    context = {
+        'current_year': current_year,
+        'default_week': default_week,
+    }
+    return render(request, "roundup/homepage.html", context)
 
 def weekly_report(request: HttpRequest, year: int, week: int) -> HttpResponse:
     league = get_league(year=year)
