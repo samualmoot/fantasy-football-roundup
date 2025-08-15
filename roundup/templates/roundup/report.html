@@ -2,9 +2,11 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+  {% load static %}
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <title>{{ league_name }} – Week {{ week }} Roundup</title>
+  <link rel="stylesheet" href="{% static 'roundup/report.css' %}">
   <style>
     :root {
       --primary: #3b82f6;
@@ -1487,7 +1489,7 @@
       </div>
     </header>
 
-    <section class="card overview-card" style="grid-column: 1 / -1; grid-row: 2;">
+    <section class="card overview-card overview-section">
       <h2>Overview</h2>
       <p id="overview">
         <span class="spinner" id="overview-spinner"></span>
@@ -1542,7 +1544,7 @@
     </div>
 
     <!-- Center: Weekly Scores (fills remaining height) -->
-    <section class="card scores-card" id="scores-card" style="grid-column: 2; grid-row: 4;">
+    <section class="card scores-card scores-section" id="scores-card">
       <h2 style="text-align:center;">Weekly Scores</h2>
       
       <!-- Desktop Scores - Card Layout -->
@@ -1657,7 +1659,7 @@
     </section>
 
     <!-- Left: Booms/Busts only -->
-    <aside class="card bb-card" style="grid-column: 1; grid-row: 4;">
+    <aside class="card bb-card bb-aside">
       <h2>Top Booms &amp; Busts by Position</h2>
       <div class="bb-grid">
             {% for row in incentives.boom_bust_by_position %}
@@ -1757,7 +1759,7 @@
     </aside>
 
     <!-- Right: Standings only -->
-    <aside class="card standings-card" style="grid-column: 3; grid-row: 4;">
+    <aside class="card standings-card standings-aside">
       <h2>Standings</h2>
       
       <!-- Desktop Standings - Card Layout -->
