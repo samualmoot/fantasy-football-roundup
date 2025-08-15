@@ -21,6 +21,7 @@ from roundup.views import (
     weekly_report,
     weekly_report_narrative_api,
     weekly_report_overview_api,
+    team_logo,
 )
 
 urlpatterns = [
@@ -31,4 +32,5 @@ urlpatterns = [
 
         # Homepage redirect
     path('', homepage, name='homepage'),
+    path('assets/team-logo/<int:team_id>.png', team_logo, name='team_logo'),
 ]

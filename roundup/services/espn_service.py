@@ -74,9 +74,13 @@ def _compute_standings_through_week(league: League, through_week: int) -> List[D
     # Initialize team map
     team_stats: Dict[int, Dict[str, Any]] = {}
     for t in league.teams:
+        abbrev = getattr(t, "team_abbrev", getattr(t, "abbrev", None))
+        logo_url = getattr(t, "logo_url", None)
         team_stats[t.team_id] = {
             "team_id": t.team_id,
             "team_name": t.team_name,
+            "team_abbrev": abbrev,
+            "logo_url": logo_url,
             "wins": 0,
             "losses": 0,
             "ties": 0,

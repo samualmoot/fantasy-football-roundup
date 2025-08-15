@@ -1,5 +1,5 @@
 from django.shortcuts import render, redirect
-from django.http import HttpRequest, HttpResponse, JsonResponse
+from django.http import HttpRequest, HttpResponse, JsonResponse, HttpResponseNotFound
 from django.utils.crypto import salted_hmac
 
 from .espn_utils import get_league, get_playoff_team_count
@@ -28,6 +28,8 @@ from .ai_client import (
     generate_matchup_highlights,
 )
 from .ai_jobs import ensure_job, get_job_result
+import os
+import httpx
 
 
 def homepage(request):
@@ -35,16 +37,66 @@ def homepage(request):
     from datetime import datetime
     current_date = datetime.now()
     current_year = current_date.year
-    
+
     # For now, default to week 1 of current year
-    # In the future, this could show the most recent week or current week
     default_week = 1
-    
+
+    # Use current league standings to enumerate players/teams
+    league = get_league(year=current_year)
+    standings = get_standings_with_movement(league, default_week)
+
     context = {
         'current_year': current_year,
         'default_week': default_week,
+        'standings': standings,
+        # Prize placeholders; replace with your real values or surface via settings
+        'grand_prize': 0,
+        'weekly_prize': 0,
     }
     return render(request, "roundup/homepage.html", context)
+
+
+def team_logo(request: HttpRequest, team_id: int) -> HttpResponse:
+    """Proxy a team's custom logo through our server using ESPN auth cookies.
+
+    Some ESPN-hosted custom logos return 401 when fetched directly from the client
+    because they require the SWID/espn_s2 cookies. We fetch them server-side and
+    stream the bytes with appropriate content-type and caching.
+    """
+    # Resolve current year similar to homepage
+    from datetime import datetime
+    current_year = datetime.now().year
+    try:
+        league = get_league(year=current_year)
+    except Exception:
+        return HttpResponseNotFound()
+
+    team = None
+    for t in getattr(league, "teams", []) or []:
+        if getattr(t, "team_id", None) == team_id:
+            team = t
+            break
+    if team is None:
+        return HttpResponseNotFound()
+
+    logo_url = getattr(team, "logo_url", None)
+    if not logo_url:
+        return HttpResponseNotFound()
+
+    swid = os.environ.get("ESPN_SWID")
+    espn_s2 = os.environ.get("ESPN_S2")
+
+    try:
+        with httpx.Client(follow_redirects=True, timeout=10.0) as client:
+            resp = client.get(logo_url, headers={"User-Agent": "Mozilla/5.0"}, cookies={"SWID": swid or "", "espn_s2": espn_s2 or ""})
+            if resp.status_code != 200 or not resp.content:
+                return HttpResponseNotFound()
+            content_type = resp.headers.get("content-type", "image/png")
+            response = HttpResponse(resp.content, content_type=content_type)
+            response["Cache-Control"] = "public, max-age=86400"
+            return response
+    except Exception:
+        return HttpResponseNotFound()
 
 def weekly_report(request: HttpRequest, year: int, week: int) -> HttpResponse:
     league = get_league(year=year)
