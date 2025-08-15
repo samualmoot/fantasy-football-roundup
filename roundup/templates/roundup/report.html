@@ -121,7 +121,7 @@
 
     .scores { 
       width: 100%; 
-      table-layout: fixed; 
+      table-layout: auto; 
       font-variant-numeric: tabular-nums; 
     }
 
@@ -167,7 +167,6 @@
 
     .standings tr.playoff { 
       background: #ecfdf5; 
-      border-left: 4px solid var(--success);
     }
 
     .standings tr.cutoff > td { 
@@ -273,8 +272,10 @@
     }
 
     .name-col { 
-      width: auto; 
+      width: 200px; 
       font-weight: 600; 
+      word-wrap: break-word;
+      overflow-wrap: break-word;
     }
 
     .pill { 
@@ -440,12 +441,12 @@
       transition: all 0.2s ease;
     }
 
-    .award:hover {
+        .award:hover {
       background: white;
       box-shadow: var(--shadow-md);
       transform: translateY(-1px);
     }
-
+    
     .award-icon { 
       width: 32px; 
       height: 32px; 
@@ -458,7 +459,17 @@
       color: white; 
       font-weight: 700; 
       flex-shrink: 0; 
-      box-shadow: var(--shadow);
+      box-shadow: var(--shadow); 
+    }
+    
+    /* Hide mobile layouts on desktop */
+    .mobile-scores, .mobile-standings, .mobile-bb {
+      display: none;
+    }
+    
+    /* Ensure tables are visible on desktop */
+    .scores, .standings, .bb-table {
+      display: table;
     }
 
     .award-body { 
@@ -556,15 +567,20 @@
     @media (max-width: 600px) {
       body {
         padding: 12px;
+        overflow-x: hidden;
       }
       
       .grid {
-        gap: 16px;
+        display: block;
+        gap: 0;
+        min-height: auto;
+        max-width: 100%;
       }
       
       header {
         padding: 16px 20px;
-        margin-bottom: 4px;
+        margin-bottom: 16px;
+        border-radius: 12px;
       }
       
       h1 {
@@ -573,69 +589,203 @@
       }
       
       .nav {
-        gap: 6px;
+        gap: 8px;
+        flex-direction: column;
+        align-items: center;
+        width: 100%;
       }
       
       .btn {
-        padding: 6px 12px;
-        font-size: 12px;
+        padding: 8px 16px;
+        font-size: 14px;
         border-radius: 8px;
+        width: 100%;
+        justify-content: center;
+        margin-bottom: 8px;
+        max-width: 200px;
+        box-sizing: border-box;
       }
       
       .card {
         padding: 16px;
         border-radius: 12px;
+        margin-bottom: 16px;
+        max-width: 100%;
+        box-sizing: border-box;
+        width: 100%;
       }
       
-      .score-col {
+      /* Mobile: Hide tables, show simplified layouts */
+      .scores, .standings, .bb-table {
+        display: none !important;
+      }
+      
+      /* Mobile scores - card-based layout */
+      .mobile-scores {
+        display: block;
+      }
+      
+      .mobile-score-card {
+        background: var(--gray-50);
+        border: 1px solid var(--gray-200);
+        border-radius: 12px;
+        padding: 16px;
+        margin-bottom: 12px;
+        text-align: center;
+      }
+      
+      .mobile-score-teams {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 12px;
+      }
+      
+      .mobile-team {
+        flex: 1;
+        text-align: center;
+      }
+      
+      .mobile-team-name {
+        font-weight: 600;
+        font-size: 14px;
+        margin-bottom: 4px;
+      }
+      
+      .mobile-team-record {
+        font-size: 12px;
+        color: var(--gray-500);
+      }
+      
+      .mobile-score {
         font-size: 24px;
-        width: 80px;
+        font-weight: 700;
+        color: var(--success);
       }
       
-      .vs-col {
-        width: 28px;
-        font-size: 11px;
+      .mobile-score.loser {
+        color: var(--gray-600);
       }
       
-      .name-col {
+      .mobile-vs {
+        font-size: 12px;
+        color: var(--gray-500);
+        margin: 0 12px;
+        font-weight: 600;
+      }
+      
+      /* Mobile standings - list layout */
+      .mobile-standings {
+        display: block;
+      }
+      
+      .mobile-standing-item {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 12px;
+        border-bottom: 1px solid var(--gray-200);
+        background: white;
+      }
+      
+      .mobile-standing-item:last-child {
+        border-bottom: none;
+      }
+      
+      .mobile-standing-item.playoff {
+        background: #ecfdf5;
+      }
+      
+      .mobile-standing-item.cutoff {
+        border-bottom: 3px solid var(--success);
+        font-weight: 600;
+      }
+      
+      .mobile-standing-rank {
+        font-weight: 700;
+        color: var(--primary);
+        margin-right: 12px;
+        min-width: 24px;
+      }
+      
+      .mobile-standing-team {
+        flex: 1;
+        font-weight: 600;
+      }
+      
+      .mobile-standing-stats {
+        text-align: right;
+        font-size: 12px;
+      }
+      
+      .mobile-standing-record {
+        font-weight: 600;
+        margin-bottom: 2px;
+      }
+      
+      .mobile-standing-pf {
+        color: var(--gray-600);
+      }
+      
+      /* Mobile booms/busts - card layout */
+      .mobile-bb {
+        display: block;
+      }
+      
+      .mobile-bb-position {
+        background: var(--gray-50);
+        border: 1px solid var(--gray-200);
+        border-radius: 12px;
+        padding: 16px;
+        margin-bottom: 12px;
+      }
+      
+      .mobile-bb-position-title {
+        font-weight: 700;
+        font-size: 14px;
+        color: var(--primary);
+        margin-bottom: 12px;
+        text-align: center;
+        text-transform: uppercase;
+      }
+      
+      .mobile-bb-players {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+      }
+      
+      .mobile-bb-player {
+        text-align: center;
+        padding: 12px;
+        background: white;
+        border-radius: 8px;
+        border: 1px solid var(--gray-200);
+      }
+      
+      .mobile-bb-player-name {
+        font-weight: 600;
         font-size: 13px;
+        margin-bottom: 4px;
       }
       
-      th, td {
-        padding: 12px 8px;
+      .mobile-bb-player-team {
+        font-size: 11px;
+        color: var(--gray-600);
+        margin-bottom: 8px;
       }
       
-      .standings th, .standings td {
-        font-size: 12px;
-        padding: 10px 6px;
-      }
-      
-      .standings th:nth-child(2), .standings td:nth-child(2) {
-        width: 70px;
-      }
-      
-      .standings th:nth-child(3), .standings td:nth-child(3) {
-        width: 60px;
-      }
-      
-      .bb-table .pts-col {
-        width: 60px;
+      .mobile-bb-player-points {
         font-size: 18px;
+        font-weight: 700;
+        color: var(--success);
       }
       
-      .bb-logo {
-        width: 20px;
-        height: 20px;
+      .mobile-bb-player.bust .mobile-bb-player-points {
+        color: var(--danger);
       }
       
-      .bb-name-text strong {
-        font-size: 12px;
-      }
-      
-      .bb-sub {
-        font-size: 10px !important;
-      }
-      
+      /* Mobile awards */
       .award {
         padding: 12px;
         gap: 8px;
@@ -660,6 +810,11 @@
         margin-left: 6px;
         padding: 1px 4px;
       }
+      
+      /* Mobile spacing */
+      .section-divider {
+        margin: 12px 0 16px;
+      }
     }
 
     @media (max-width: 480px) {
@@ -668,11 +823,12 @@
       }
       
       .grid {
-        gap: 12px;
+        gap: 0;
       }
       
       header {
         padding: 12px 16px;
+        margin-bottom: 12px;
       }
       
       h1 {
@@ -682,34 +838,37 @@
       .card {
         padding: 12px;
         border-radius: 8px;
+        margin-bottom: 12px;
       }
       
       .score-col {
-        font-size: 20px;
-        width: 60px;
+        font-size: 18px;
+        width: 50px;
+        min-width: 50px;
       }
       
       .vs-col {
-        width: 24px;
-        font-size: 10px;
+        width: 20px;
+        font-size: 9px;
+        min-width: 20px;
       }
       
       .name-col {
-        font-size: 12px;
-      }
-      
-      th, td {
-        padding: 8px 6px;
-      }
-      
-      .standings th, .standings td {
         font-size: 11px;
-        padding: 8px 4px;
+      }
+      
+      .scores, .standings, .bb-table {
+        font-size: 10px;
+      }
+      
+      .scores td, .standings td, .bb-table td {
+        padding: 6px 3px;
       }
       
       .bb-table .pts-col {
-        width: 50px;
-        font-size: 16px;
+        width: 40px;
+        font-size: 14px;
+        min-width: 40px;
       }
       
       .award {
@@ -722,119 +881,10 @@
         font-size: 10px;
       }
       
-      /* Ensure tables don't overflow on very small screens */
-      .scores, .standings, .bb-table {
-        font-size: 11px;
-      }
-      
-      .scores td, .standings td, .bb-table td {
-        word-break: break-word;
-      }
-      
-      /* Stack navigation buttons vertically on very small screens */
-      .nav {
-        flex-direction: column;
-        align-items: center;
-      }
-      
       .btn {
-        width: 100%;
-        justify-content: center;
-        margin-bottom: 4px;
-      }
-    }
-    
-    /* Additional mobile optimizations */
-    @media (max-width: 600px) {
-      /* Ensure content doesn't get cut off */
-      .grid {
-        min-height: auto;
-      }
-      
-      /* Make tables more readable on mobile */
-      .scores tbody tr {
-        border-bottom: 1px solid var(--gray-200);
-      }
-      
-      .scores tbody tr:last-child {
-        border-bottom: none;
-      }
-      
-      /* Improve spacing for mobile */
-      .section-divider {
-        margin: 12px 0 16px;
-      }
-      
-      /* Better mobile table layout */
-      .bb-table th, .bb-table td {
-        padding: 8px 4px;
-      }
-      
-      /* Ensure tables don't cause horizontal scroll */
-      .scores, .standings, .bb-table {
-        max-width: 100%;
-        overflow-x: auto;
-      }
-      
-      /* Optimize table cell widths for mobile */
-      .scores td {
-        min-width: 0;
-        max-width: none;
-      }
-      
-      /* Better mobile grid layout */
-      .grid {
-        grid-template-rows: auto auto auto auto auto auto;
-      }
-    }
-    
-    /* Ensure proper mobile rendering */
-    @media (max-width: 480px) {
-      /* Prevent horizontal overflow */
-      body {
-        overflow-x: hidden;
-      }
-      
-      .grid {
-        width: 100%;
-        max-width: 100%;
-      }
-      
-      /* Stack all content vertically on very small screens */
-      .card {
-        margin-bottom: 16px;
-      }
-      
-      /* Optimize table display for very small screens */
-      .scores, .standings, .bb-table {
-        font-size: 10px;
-      }
-      
-      .scores td, .standings td, .bb-table td {
-        padding: 6px 4px;
-      }
-      
-      /* Ensure all content fits within viewport */
-      .card {
-        max-width: 100%;
-        box-sizing: border-box;
-      }
-      
-      /* Optimize text wrapping for very small screens */
-      .name-col, .standings td:first-child {
-        word-wrap: break-word;
-        hyphens: auto;
-      }
-      
-      /* Ensure navigation is mobile-friendly */
-      .nav {
-        width: 100%;
-      }
-      
-      .btn {
-        width: 100%;
-        max-width: 200px;
-        box-sizing: border-box;
+        padding: 6px 12px;
+        font-size: 13px;
+        margin-bottom: 6px;
       }
     }
   </style>
@@ -869,7 +919,7 @@
     </section>
 
     <!-- Center: Weekly Scores (fills remaining height) -->
-    <section class="card" id="scores-card" style="grid-column: 2; grid-row: 3; display: flex; flex-direction: column;">
+    <section class="card" id="scores-card" style="grid-column: 2; grid-row: 3;">
       <h2 style="text-align:center;">Weekly Scores</h2>
       <table class="scores" id="scores-table">
         <tbody>
@@ -904,6 +954,31 @@
           {% endfor %}
         </tbody>
       </table>
+      
+      <!-- Mobile Scores Layout -->
+      <div class="mobile-scores">
+        {% for m in scoreboard %}
+        <div class="mobile-score-card">
+          <div class="mobile-score-teams">
+            <div class="mobile-team">
+              <div class="mobile-team-name">{{ m.home_team }}</div>
+              {% if m.home_record %}<div class="mobile-team-record">{{ m.home_record }}</div>{% endif %}
+              <div class="mobile-score {% if m.winner != m.home_team %}loser{% endif %}">
+                {% if m.winner == m.home_team %}<strong>{{ m.home_score }}</strong>{% else %}{{ m.home_score }}{% endif %}
+              </div>
+            </div>
+            <div class="mobile-vs">vs</div>
+            <div class="mobile-team">
+              <div class="mobile-team-name">{{ m.away_team }}</div>
+              {% if m.away_record %}<div class="mobile-team-record">{{ m.away_record }}</div>{% endif %}
+              <div class="mobile-score {% if m.winner != m.away_team %}loser{% endif %}">
+                {% if m.winner == m.away_team %}<strong>{{ m.away_score }}</strong>{% else %}{{ m.away_score }}{% endif %}
+              </div>
+            </div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
     </section>
 
     <!-- Left: Booms/Busts (full-height) -->
@@ -913,23 +988,23 @@
           <table class="table-sticky bb-table">
           <thead>
             <tr>
-                <th style="text-align:left; padding:6px 4px;">Pos</th>
-                <th style="text-align:left; padding:6px 4px;">Boom</th>
-                <th class="pts-col" style="padding:6px 4px;">Pts</th>
-                <th class="pts-col" style="padding:6px 4px;">Pts</th>
-                <th style="text-align:left; padding:6px 4px;">Bust</th>
+                <th>Pos</th>
+                <th>Boom</th>
+                <th class="pts-col">Pts</th>
+                <th class="pts-col">Pts</th>
+                <th>Bust</th>
             </tr>
           </thead>
           <tbody>
             {% for row in incentives.boom_bust_by_position %}
             <tr>
-                <td style="padding:6px 4px; font-weight:bold;">{{ row.position }}</td>
-                <td style="padding:6px 4px;" class="bb-name">
+                <td style="font-weight:bold;">{{ row.position }}</td>
+                <td class="bb-name">
                   {% if row.boom %}
                     <div style="display:flex; align-items:center; gap:8px;">
                       <div>
                         <div class="bb-name-text"><strong>{{ row.boom.player_name }}</strong></div>
-                        <div class="muted bb-sub">{{ row.boom.fantasy_team }}</div>
+                        <div class="bb-sub">{{ row.boom.fantasy_team }}</div>
                       </div>
                       {% if row.boom.nfl_logo %}<img class="bb-logo" src="{{ row.boom.nfl_logo }}" alt="{{ row.boom.nfl_team }} logo" />{% endif %}
                     </div>
@@ -937,15 +1012,15 @@
                     <span class="muted">—</span>
                   {% endif %}
                 </td>
-                <td class="pts-col" style="padding:6px 4px; font-weight:bold;">{% if row.boom %}{{ row.boom.points }}{% else %}—{% endif %}</td>
-                <td class="pts-col" style="padding:6px 4px; font-weight:bold;">{% if row.bust %}{{ row.bust.points }}{% else %}—{% endif %}</td>
-                <td style="padding:6px 4px;" class="bb-name">
+                <td class="pts-col" style="font-weight:bold;">{% if row.boom %}{{ row.boom.points }}{% else %}—{% endif %}</td>
+                <td class="pts-col" style="font-weight:bold;">{% if row.bust %}{{ row.bust.points }}{% else %}—{% endif %}</td>
+                <td class="bb-name">
                   {% if row.bust %}
                     <div style="display:flex; align-items:center; gap:8px;">
                       {% if row.bust.nfl_logo %}<img class="bb-logo" src="{{ row.bust.nfl_logo }}" alt="{{ row.bust.nfl_team }} logo" />{% endif %}
                       <div>
                         <div class="bb-name-text"><strong>{{ row.bust.player_name }}</strong></div>
-                        <div class="muted bb-sub">{{ row.bust.fantasy_team }}</div>
+                        <div class="bb-sub">{{ row.bust.fantasy_team }}</div>
                       </div>
                     </div>
                   {% else %}
@@ -959,6 +1034,40 @@
           </tbody>
         </table>
       </div>
+      
+      <!-- Mobile Booms/Busts Layout -->
+      <div class="mobile-bb">
+        {% for row in incentives.boom_bust_by_position %}
+        <div class="mobile-bb-position">
+          <div class="mobile-bb-position-title">{{ row.position }}</div>
+          <div class="mobile-bb-players">
+            <div class="mobile-bb-player">
+              {% if row.boom %}
+                <div class="mobile-bb-player-name">{{ row.boom.player_name }}</div>
+                <div class="mobile-bb-player-team">{{ row.boom.fantasy_team }}</div>
+                <div class="mobile-bb-player-points">{{ row.boom.points }}</div>
+              {% else %}
+                <div class="mobile-bb-player-name">—</div>
+                <div class="mobile-bb-player-team">No boom</div>
+                <div class="mobile-bb-player-points">—</div>
+              {% endif %}
+            </div>
+            <div class="mobile-bb-player bust">
+              {% if row.bust %}
+                <div class="mobile-bb-player-name">{{ row.bust.player_name }}</div>
+                <div class="mobile-bb-player-team">{{ row.bust.fantasy_team }}</div>
+                <div class="mobile-bb-player-points">{{ row.bust.points }}</div>
+              {% else %}
+                <div class="mobile-bb-player-name">—</div>
+                <div class="mobile-bb-player-team">No bust</div>
+                <div class="mobile-bb-player-points">—</div>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+      
       <div class="section-divider"></div>
       <div>
         <h2>Awards of the Week</h2>
@@ -972,14 +1081,14 @@
               </div>
             </li>
           {% empty %}
-            <li class="muted" style="padding: 6px 0;">No awards available.</li>
+            <li class="muted">No awards available.</li>
           {% endfor %}
         </ul>
       </div>
     </aside>
 
     <!-- Right: Standings and Weekly Incentive -->
-    <aside class="card" style="grid-column: 3; grid-row: 3; display:flex; flex-direction:column; gap:12px;">
+    <aside class="card" style="grid-column: 3; grid-row: 3;">
       <h2>Standings</h2>
       <table class="standings">
         <thead>
@@ -1004,6 +1113,29 @@
           {% endfor %}
         </tbody>
       </table>
+      
+      <!-- Mobile Standings Layout -->
+      <div class="mobile-standings">
+        {% for t in standings %}
+        <div class="mobile-standing-item {% if t.rank <= playoff_team_count %}playoff{% endif %} {% if t.rank == playoff_team_count %}cutoff{% endif %}">
+          <div class="mobile-standing-rank">#{{ t.rank }}</div>
+          <div class="mobile-standing-team">
+            {{ t.team_name }}
+            {% if t.movement_abs %}
+              {% if t.movement_is_up %}
+                <span class="move up">▲ {{ t.movement_abs }}</span>
+              {% else %}
+                <span class="move down">▼ {{ t.movement_abs }}</span>
+              {% endif %}
+            {% endif %}
+          </div>
+          <div class="mobile-standing-stats">
+            <div class="mobile-standing-record">{{ t.wins }}-{{ t.losses }}-{{ t.ties }}</div>
+            <div class="mobile-standing-pf">{{ t.points_for }}</div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
       <div class="muted" style="margin-top:6px;">Top {{ playoff_team_count }} highlighted as current playoff positions.</div>
       <div class="section-divider"></div>
       <div>
