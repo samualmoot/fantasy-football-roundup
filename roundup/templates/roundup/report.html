@@ -203,58 +203,59 @@
     <aside class="card bb-card bb-aside">
       <h2>Booms &amp; Busts</h2>
       <div class="bb-grid">
-            {% for row in incentives.boom_bust_by_position %}
+        {% for row in incentives.boom_bust_by_position %}
         <div class="bb-position-card">
           <div class="bb-position-header">{{ row.position }}</div>
-          <div class="bb-players">
-            <div class="bb-player boom">
-                  {% if row.boom %}
-                <div class="bb-player-header">
-                  <span class="bb-player-type">Boom</span>
-                      </div>
-                <div class="bb-player-content">
-                  <div class="bb-player-name">{{ row.boom.player_name }}</div>
-                  <div class="bb-player-team">{{ row.boom.fantasy_team }}</div>
-                  <div class="bb-player-points">{{ row.boom.points }} pts</div>
-                    </div>
-                {% if row.boom.nfl_logo %}
-                  <img class="bb-nfl-logo" src="{{ row.boom.nfl_logo }}" alt="{{ row.boom.nfl_team }} logo" />
-                {% endif %}
-                  {% else %}
-                <div class="bb-player-header">
-                  <span class="bb-player-type">Boom</span>
+          
+          <div class="bb-sections-container">
+            <!-- Booms Section -->
+            <div class="bb-section">
+              <div class="bb-section-header boom">
+                <span class="bb-section-title">Top 3 Booms</span>
+              </div>
+              <div class="bb-players-list">
+                {% for player in row.booms %}
+                <div class="bb-player-item boom">
+                  <img class="bb-player-nfl-logo" src="{{ player.nfl_logo }}" alt="{{ player.nfl_team }} logo" />
+                  <div class="bb-player-info">
+                    <div class="bb-player-name">{{ player.player_name }}</div>
+                    <div class="bb-player-team">{{ player.fantasy_team }}</div>
+                  </div>
+                  <div class="bb-player-points">{{ player.points }} pts</div>
                 </div>
-                <div class="bb-player-content">
-                  <div class="bb-player-name muted">No boom</div>
-                  <div class="bb-player-team muted">—</div>
-                  <div class="bb-player-points muted">—</div>
+                {% empty %}
+                <div class="bb-player-item boom no-data">
+                  <div class="bb-player-info">
+                    <div class="bb-player-name muted">No data</div>
+                  </div>
                 </div>
-                  {% endif %}
+                {% endfor %}
+              </div>
             </div>
             
-            <div class="bb-player bust">
-                  {% if row.bust %}
-                <div class="bb-player-header">
-                  <span class="bb-player-type">Bust</span>
-                      </div>
-                <div class="bb-player-content">
-                  <div class="bb-player-name">{{ row.bust.player_name }}</div>
-                  <div class="bb-player-team">{{ row.bust.fantasy_team }}</div>
-                  <div class="bb-player-points">{{ row.bust.points }} pts</div>
-                    </div>
-                {% if row.bust.nfl_logo %}
-                  <img class="bb-nfl-logo" src="{{ row.bust.nfl_logo }}" alt="{{ row.bust.nfl_team }} logo" />
-                {% endif %}
-                  {% else %}
-                <div class="bb-player-header">
-                  <span class="bb-player-type">Bust</span>
+            <!-- Busts Section -->
+            <div class="bb-section">
+              <div class="bb-section-header bust">
+                <span class="bb-section-title">Top 3 Busts</span>
+              </div>
+              <div class="bb-players-list">
+                {% for player in row.busts %}
+                <div class="bb-player-item bust">
+                  <img class="bb-player-nfl-logo" src="{{ player.nfl_logo }}" alt="{{ player.nfl_team }} logo" />
+                  <div class="bb-player-info">
+                    <div class="bb-player-name">{{ player.player_name }}</div>
+                    <div class="bb-player-team">{{ player.fantasy_team }}</div>
+                  </div>
+                  <div class="bb-player-points">{{ player.points }} pts</div>
                 </div>
-                <div class="bb-player-content">
-                  <div class="bb-player-name muted">No bust</div>
-                  <div class="bb-player-team muted">—</div>
-                  <div class="bb-player-points muted">—</div>
+                {% empty %}
+                <div class="bb-player-item bust no-data">
+                  <div class="bb-player-info">
+                    <div class="bb-player-name muted">No data</div>
+                  </div>
                 </div>
-              {% endif %}
+                {% endfor %}
+              </div>
             </div>
           </div>
         </div>
@@ -270,28 +271,51 @@
         {% for row in incentives.boom_bust_by_position %}
         <div class="mobile-bb-position">
           <div class="mobile-bb-position-title">{{ row.position }}</div>
-          <div class="mobile-bb-players">
-            <div class="mobile-bb-player">
-              {% if row.boom %}
-                <div class="mobile-bb-player-name">{{ row.boom.player_name }}</div>
-                <div class="mobile-bb-player-team">{{ row.boom.fantasy_team }}</div>
-                <div class="mobile-bb-player-points">{{ row.boom.points }}</div>
-              {% else %}
-                <div class="mobile-bb-player-name">—</div>
-                <div class="mobile-bb-player-team">No boom</div>
-                <div class="mobile-bb-player-points">—</div>
-              {% endif %}
+          <div class="mobile-bb-sections-container">
+            <!-- Mobile Booms -->
+            <div class="mobile-bb-section">
+              <div class="mobile-bb-section-title">Top 3 Booms</div>
+              <div class="mobile-bb-players-list">
+                {% for player in row.booms %}
+                <div class="mobile-bb-player-item boom">
+                  <img class="mobile-bb-player-nfl-logo" src="{{ player.nfl_logo }}" alt="{{ player.nfl_team }} logo" />
+                  <div class="mobile-bb-player-info">
+                    <div class="mobile-bb-player-name">{{ player.player_name }}</div>
+                    <div class="mobile-bb-player-team">{{ player.fantasy_team }}</div>
+                  </div>
+                  <div class="mobile-bb-player-points">{{ player.points }} pts</div>
+                </div>
+                {% empty %}
+                <div class="mobile-bb-player-item boom no-data">
+                  <div class="mobile-bb-player-info">
+                    <div class="mobile-bb-player-name muted">No data</div>
+                  </div>
+                </div>
+                {% endfor %}
+              </div>
             </div>
-            <div class="mobile-bb-player bust">
-              {% if row.bust %}
-                <div class="mobile-bb-player-name">{{ row.bust.player_name }}</div>
-                <div class="mobile-bb-player-team">{{ row.bust.fantasy_team }}</div>
-                <div class="mobile-bb-player-points">{{ row.bust.points }}</div>
-              {% else %}
-                <div class="mobile-bb-player-name">—</div>
-                <div class="mobile-bb-player-team">No bust</div>
-                <div class="mobile-bb-player-points">—</div>
-              {% endif %}
+            
+            <!-- Mobile Busts -->
+            <div class="mobile-bb-section">
+              <div class="mobile-bb-section-title">Top 3 Busts</div>
+              <div class="mobile-bb-players-list">
+                {% for player in row.busts %}
+                <div class="mobile-bb-player-item bust">
+                  <img class="mobile-bb-player-nfl-logo" src="{{ player.nfl_logo }}" alt="{{ player.nfl_team }} logo" />
+                  <div class="mobile-bb-player-info">
+                    <div class="mobile-bb-player-name">{{ player.player_name }}</div>
+                    <div class="mobile-bb-player-team">{{ player.fantasy_team }}</div>
+                  </div>
+                  <div class="mobile-bb-player-points">{{ player.points }} pts</div>
+                </div>
+                {% empty %}
+                <div class="mobile-bb-player-item bust no-data">
+                  <div class="mobile-bb-player-info">
+                    <div class="mobile-bb-player-name muted">No data</div>
+                  </div>
+                </div>
+                {% endfor %}
+              </div>
             </div>
           </div>
         </div>
@@ -370,7 +394,7 @@
                 <span class="move down">▼ {{ t.movement_abs }}</span>
               {% endif %}
             {% endif %}
-      </div>
+          </div>
           <div class="mobile-standing-stats">
             <div class="mobile-standing-record">{{ t.wins }}-{{ t.losses }}-{{ t.ties }}</div>
             <div class="mobile-standing-pf">{{ t.points_for }}</div>
@@ -378,7 +402,7 @@
         </div>
         {% endfor %}
       </div>
-              <div class="muted-with-margin">Top {{ playoff_team_count }} highlighted as current playoff positions.</div>
+      <div class="muted-with-margin">Top {{ playoff_team_count }} highlighted as current playoff positions.</div>
     </aside>
     
     <!-- Mobile Booms & Busts - Moved to bottom for mobile layout -->
@@ -389,28 +413,51 @@
           {% for row in incentives.boom_bust_by_position %}
           <div class="mobile-bb-position">
             <div class="mobile-bb-position-title">{{ row.position }}</div>
-            <div class="mobile-bb-players">
-              <div class="mobile-bb-player">
-                {% if row.boom %}
-                  <div class="mobile-bb-player-name">{{ row.boom.player_name }}</div>
-                  <div class="mobile-bb-player-team">{{ row.boom.fantasy_team }}</div>
-                  <div class="mobile-bb-player-points">{{ row.boom.points }}</div>
-                {% else %}
-                  <div class="mobile-bb-player-name">—</div>
-                  <div class="mobile-bb-player-team">No boom</div>
-                  <div class="mobile-bb-player-points">—</div>
-                {% endif %}
+            <div class="mobile-bb-sections-container">
+              <!-- Mobile Booms -->
+              <div class="mobile-bb-section">
+                <div class="mobile-bb-section-title">Top 3 Booms</div>
+                <div class="mobile-bb-players-list">
+                  {% for player in row.booms %}
+                  <div class="mobile-bb-player-item boom">
+                    <img class="mobile-bb-player-nfl-logo" src="{{ player.nfl_logo }}" alt="{{ player.nfl_team }} logo" />
+                    <div class="mobile-bb-player-info">
+                      <div class="mobile-bb-player-name">{{ player.player_name }}</div>
+                      <div class="mobile-bb-player-team">{{ player.fantasy_team }}</div>
+                    </div>
+                    <div class="mobile-bb-player-points">{{ player.points }} pts</div>
+                  </div>
+                  {% empty %}
+                  <div class="mobile-bb-player-item boom no-data">
+                    <div class="mobile-bb-player-info">
+                      <div class="mobile-bb-player-name muted">No data</div>
+                    </div>
+                  </div>
+                  {% endfor %}
+                </div>
               </div>
-              <div class="mobile-bb-player bust">
-                {% if row.bust %}
-                  <div class="mobile-bb-player-name">{{ row.bust.player_name }}</div>
-                  <div class="mobile-bb-player-team">{{ row.bust.fantasy_team }}</div>
-                  <div class="mobile-bb-player-points">{{ row.bust.points }}</div>
-                {% else %}
-                  <div class="mobile-bb-player-name">—</div>
-                  <div class="mobile-bb-player-team">No bust</div>
-                  <div class="mobile-bb-player-points">—</div>
-                {% endif %}
+              
+              <!-- Mobile Busts -->
+              <div class="mobile-bb-section">
+                <div class="mobile-bb-section-title">Top 3 Busts</div>
+                <div class="mobile-bb-players-list">
+                  {% for player in row.busts %}
+                  <div class="mobile-bb-player-item bust">
+                    <img class="mobile-bb-player-nfl-logo" src="{{ player.nfl_logo }}" alt="{{ player.nfl_team }} logo" />
+                    <div class="mobile-bb-player-info">
+                      <div class="mobile-bb-player-name">{{ player.player_name }}</div>
+                      <div class="mobile-bb-player-team">{{ player.fantasy_team }}</div>
+                    </div>
+                    <div class="mobile-bb-player-points">{{ player.points }} pts</div>
+                  </div>
+                  {% empty %}
+                  <div class="mobile-bb-player-item bust no-data">
+                    <div class="mobile-bb-player-info">
+                      <div class="mobile-bb-player-name muted">No data</div>
+                    </div>
+                  </div>
+                  {% endfor %}
+                </div>
               </div>
             </div>
           </div>
@@ -418,10 +465,6 @@
         </div>
       </div>
     </div>
-    
-    
-
-
   </div>
   <script>
     (function() {

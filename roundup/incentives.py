@@ -361,10 +361,10 @@ def compute_boom_bust_by_position(
     *,
     positions: List[str] | None = None,
 ) -> List[Dict[str, Any]]:
-    """Return a list of rows with boom/bust per position (starters only).
+    """Return a list of rows with top 3 booms and busts per position (starters only).
 
-    Each row: { position, boom: {player_name, points, fantasy_team, nfl_team},
-                bust: { ... } }
+    Each row: { position, booms: [top3_players], busts: [bottom3_players] }
+    Each player: {player_name, points, fantasy_team, nfl_team, nfl_logo}
     Supports D/ST or DST equivalently.
     """
     if positions is None:
@@ -397,15 +397,22 @@ def compute_boom_bust_by_position(
     for pos in positions:
         pool = [p for p in starters if matches_position(p, pos)]
         if not pool:
-            rows.append({"position": pos, "boom": None, "bust": None})
+            rows.append({"position": pos, "booms": [], "busts": []})
             continue
-        # Boom: max points; Bust: min points
-        boom_p = max(pool, key=lambda p: (p.get("points") or 0.0))
-        bust_p = min(pool, key=lambda p: (p.get("points") or 0.0))
+        
+        # Sort by points: highest first for booms, lowest first for busts
+        sorted_pool = sorted(pool, key=lambda p: (p.get("points") or 0.0), reverse=True)
+        
+        # Top 3 booms (highest points)
+        booms = [project(p) for p in sorted_pool[:3]]
+        
+        # Bottom 3 busts (lowest points)
+        busts = [project(p) for p in sorted_pool[-3:]]
+        
         rows.append({
             "position": pos,
-            "boom": project(boom_p),
-            "bust": project(bust_p),
+            "booms": booms,
+            "busts": busts,
         })
     return rows
 
