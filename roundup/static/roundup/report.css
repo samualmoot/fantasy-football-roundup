@@ -1,25 +1,51 @@
-/* Fantasy Football Roundup Report Styles */
+/* ===== FANTASY FOOTBALL ROUNDUP REPORT STYLES =====
+ * 
+ * This stylesheet controls the appearance of the weekly fantasy football report page.
+ * The page displays weekly scores, standings, player performance highlights, and AI-generated content.
+ * 
+ * PAGE LAYOUT STRUCTURE:
+ * - Top Banner: Week/Season header with navigation
+ * - Overview Section: AI-generated weekly summary (spans full width)
+ * - Left Sidebar: Player highlights and weekly incentive winner
+ * - Center: Weekly scores (stretches full page height)
+ * - Right Sidebar: League standings
+ * - Mobile: Stacked layout with booms & busts at bottom
+ * 
+ * COMPONENTS:
+ * - Header: Navigation and title
+ * - Overview Card: AI-generated weekly summary
+ * - Weekly Scores: Matchup results with team logos and scores
+ * - Standings: League rankings with playoff indicators
+ * - Booms & Busts: Top/worst NFL player performances by position
+ * - Weekly Incentive: Winner and next week's incentive
+ * - Player Highlights: Top performers and notable stats
+ * - Awards: Weekly recognition categories
+ */
 
+/* ===== CSS VARIABLES (DESIGN SYSTEM) =====
+ * Color palette, shadows, and spacing used throughout the design
+ * These variables ensure consistent theming and easy customization
+ */
 :root {
-  --primary: #3b82f6;
-  --primary-dark: #2563eb;
-  --primary-light: #dbeafe;
-  --secondary: #8b5cf6;
-  --accent: #06b6d4;
-  --success: #10b981;
-  --warning: #f59e0b;
-  --danger: #ef4444;
-  --gray-50: #f9fafb;
-  --gray-100: #f3f4f6;
-  --gray-200: #e5e7eb;
-  --gray-300: #d1d5db;
-  --gray-400: #9ca3af;
-  --gray-500: #6b7280;
-  --gray-600: #4b5563;
-  --gray-700: #374151;
-  --gray-800: #1f2937;
-  --gray-900: #111827;
-  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --primary: #3b82f6;        /* Main blue color for primary elements */
+  --primary-dark: #2563eb;   /* Darker blue for hover states */
+  --primary-light: #dbeafe;  /* Light blue for backgrounds */
+  --secondary: #8b5cf6;      /* Purple for secondary elements */
+  --accent: #06b6d4;         /* Cyan for highlights and accents */
+  --success: #10b981;        /* Green for wins and positive stats */
+  --warning: #f59e0b;        /* Orange for warnings and incentives */
+  --danger: #ef4444;         /* Red for losses and negative stats */
+  --gray-50: #f9fafb;        /* Very light gray for backgrounds */
+  --gray-100: #f3f4f6;       /* Light gray for subtle backgrounds */
+  --gray-200: #e5e7eb;       /* Border gray */
+  --gray-300: #d1d5db;       /* Medium gray for hover states */
+  --gray-400: #9ca3af;       /* Text gray for secondary content */
+  --gray-500: #6b7280;       /* Medium text gray */
+  --gray-600: #4b5563;       /* Dark text gray */
+  --gray-700: #374151;       /* Very dark text gray */
+  --gray-800: #1f2937;       /* Primary text color */
+  --gray-900: #111827;       /* Darkest text color */
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);                    /* Subtle shadows */
   --shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
   --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
   --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
@@ -40,50 +66,71 @@ body {
   line-height: 1.6;
 }
 
-/* Grid Layout */
+/* ===== GRID LAYOUT SYSTEM =====
+ * 
+ * The page uses CSS Grid for responsive layout with 3 main columns:
+ * Column 1 (1fr): Left sidebar - Player highlights and weekly incentive
+ * Column 2 (2.3fr): Center - Weekly scores (widest column)
+ * Column 3 (1.2fr): Right sidebar - League standings
+ * 
+ * Grid Rows:
+ * Row 1: Header with navigation
+ * Row 2: Overview section (spans full width)
+ * Row 3: Player highlights row (highlights + incentive)
+ * Row 4: Main content (left sidebar + scores + right sidebar)
+ */
 .grid { 
   display: grid; 
-  grid-template-columns: 1fr 2.3fr 1.2fr; 
-  grid-template-rows: auto auto auto 1fr; 
+  grid-template-columns: 1fr 2.3fr 1.2fr; /* Left | Center | Right */
+  grid-template-rows: auto auto auto 1fr;  /* Header | Overview | Highlights | Main */
   gap: 24px; 
   min-height: calc(100vh - 40px);
   max-width: 1400px;
   margin: 0 auto;
 }
 
+/* Overview section spans all columns at the top */
 .overview-section { 
-  grid-column: 1 / -1; 
-  grid-row: 2; 
+  grid-column: 1 / -1; /* Span from first to last column */
+  grid-row: 2;         /* Second row */
 }
 
+/* Weekly scores in center column, stretches to bottom */
 .scores-section { 
-  grid-column: 2; 
-  grid-row: 4; 
+  grid-column: 2;       /* Center column */
+  grid-row: 4;          /* Fourth row (main content) */
 }
 
+/* Left sidebar: Booms & Busts section */
 .bb-aside { 
-  grid-column: 1; 
-  grid-row: 4; 
+  grid-column: 1;       /* First column */
+  grid-row: 4;          /* Fourth row (main content) */
 }
 
+/* Right sidebar: League standings */
 .standings-aside { 
-  grid-column: 3; 
-  grid-row: 4; 
+  grid-column: 3;       /* Third column */
+  grid-row: 4;          /* Fourth row (main content) */
 }
 
-/* Wrapper below Overview to let Highlights grow and Incentive shrink */
+/* Row below Overview: Player highlights and weekly incentive side by side */
 .overview-row {
-  grid-column: 1 / -1;
-  grid-row: 3;
+  grid-column: 1 / -1;  /* Span full width */
+  grid-row: 3;          /* Third row */
   display: grid;
   grid-template-columns: auto 1fr; /* Highlights sized by content, Incentive takes remaining */
   gap: 24px;
   align-items: start;
 }
 
-/* Header */
+/* ===== HEADER COMPONENT =====
+ * 
+ * The main header contains the week/season title and navigation buttons.
+ * Spans full width at the top of the page with gradient background.
+ * Navigation includes week selection and other controls.
+ */
 header { 
-  grid-column: 1 / -1; 
+  grid-column: 1 / -1; /* Span full width */
   display: flex; 
   align-items: center; 
   justify-content: space-between; 
@@ -97,7 +144,12 @@ header {
   margin-bottom: 8px;
 }
 
-/* Cards */
+/* ===== CARD COMPONENT SYSTEM =====
+ * 
+ * Base card styling used throughout the page for consistent containers.
+ * Cards have subtle shadows, rounded corners, and hover effects.
+ * Different card variants use color-coded borders and backgrounds.
+ */
 .card { 
   background: white; 
   border: 1px solid var(--gray-200); 
@@ -108,7 +160,14 @@ header {
   border: none;
 }
 
-/* Subtle color variants for other cards */
+/* ===== CARD VARIANT STYLES =====
+ * 
+ * Different card types use color-coded styling to distinguish their purpose:
+ * - Scores: Blue tint for weekly matchup results
+ * - Booms & Busts: Cyan tint for player performance data
+ * - Standings: Green tint for league rankings
+ * - Overview: Purple tint for AI-generated summary
+ */
 .scores-card {
   background: linear-gradient(135deg, rgba(59, 130, 246, 0.08) 0%, #ffffff 100%);
   border: 1px solid rgba(59, 130, 246, 0.25);
@@ -130,11 +189,13 @@ header {
   border: 1px solid rgba(139, 92, 246, 0.25);
 }
 
+/* Card hover effects for interactive feel */
 .card:hover {
   transform: translateY(-2px);
   box-shadow: var(--shadow-xl);
 }
 
+/* Banner variant for prominent sections */
 .banner { 
   background: linear-gradient(135deg, var(--primary), var(--secondary)); 
   color: white; 
@@ -142,7 +203,13 @@ header {
   box-shadow: var(--shadow-xl);
 }
 
-/* Typography */
+/* ===== TYPOGRAPHY SYSTEM =====
+ * 
+ * Consistent text styling throughout the page:
+ * - h1: Main page title (week/season)
+ * - h2: Section headers
+ * - Body text uses system fonts with consistent line heights
+ */
 h1 { 
   margin: 0; 
   font-size: 28px; 
@@ -164,24 +231,32 @@ ul {
   padding-left: 20px; 
 }
 
-/* Tables */
+/* ===== TABLE STYLES =====
+ * 
+ * Base table styling used for scores, standings, and other data displays.
+ * Tables have consistent spacing, borders, and hover effects.
+ * Special styling for close games and playoff teams.
+ */
 table { 
   width: 100%; 
   border-collapse: collapse; 
 }
 
+/* Weekly scores table - shows matchup results */
 .scores { 
   width: 100%; 
   table-layout: auto; 
-  font-variant-numeric: tabular-nums; 
+  font-variant-numeric: tabular-nums; /* Aligns numbers properly */
 }
 
+/* Table cell styling */
 th, td { 
   padding: 16px 12px; 
   border-bottom: 1px solid var(--gray-200); 
   vertical-align: middle; 
 }
 
+/* Table header styling */
 th { 
   text-align: left; 
   color: var(--gray-600); 
@@ -193,6 +268,7 @@ th {
   border-bottom: 2px solid var(--gray-200);
 }
 
+/* Alternating row colors for readability */
 tbody tr:nth-child(odd) { 
   background: var(--gray-50); 
 }
@@ -201,34 +277,45 @@ tbody tr:nth-child(even) {
   background: white;
 }
 
+/* Row hover effects */
 tbody tr:hover {
   background: var(--primary-light);
   transform: scale(1.01);
   transition: all 0.2s ease;
 }
 
+/* Special styling for close games (highlighted in yellow) */
 tbody tr.close { 
   background: #fef3c7; 
   border-left: 4px solid var(--warning);
 }
 
+/* ===== STANDINGS TABLE STYLES =====
+ * 
+ * League standings table with fixed column widths for consistent layout.
+ * Columns: Team Name (60%) | Record (20%) | Total Points (20%)
+ * Records and points are center-aligned and don't wrap.
+ */
 .standings { 
-  table-layout: fixed; 
+  table-layout: fixed; /* Fixed column widths for consistency */
 }
 
+/* Team name column - takes up most space */
 .standings td:nth-child(1) { 
   width: 60%; 
   padding-right: 16px;
 }
 
+/* Record and points columns - equal width, center-aligned */
 .standings td:nth-child(2), .standings td:nth-child(3) { 
   width: 20%; 
   text-align: center;
-  white-space: nowrap;
+  white-space: nowrap; /* Prevent text wrapping */
   font-size: 14px;
   line-height: 1.2;
 }
 
+/* Total points column */
 .standings td:nth-child(4) { 
   width: 20%; 
   text-align: center;
@@ -237,19 +324,24 @@ tbody tr.close {
   line-height: 1.2;
 }
 
-/* Navigation */
+/* ===== NAVIGATION COMPONENTS =====
+ * 
+ * Header navigation with week selection buttons and other controls.
+ * Buttons have glass-morphism effect with hover animations.
+ */
 .nav { 
   display: flex; 
   gap: 8px; 
   flex-wrap: wrap;
 }
 
+/* Navigation button styling */
 .btn { 
   display: inline-flex; 
   align-items: center; 
   gap: 8px; 
   padding: 8px 16px; 
-  background: rgba(255, 255, 255, 0.1); 
+  background: rgba(255, 255, 255, 0.1); /* Semi-transparent white */
   color: white; 
   text-decoration: none; 
   border-radius: 8px; 
@@ -258,23 +350,30 @@ tbody tr.close {
   border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
+/* Button hover effects */
 .btn:hover { 
   background: rgba(255, 255, 255, 0.2); 
   transform: translateY(-1px);
 }
 
+/* Disabled button state */
 .btn.disabled { 
   opacity: 0.5; 
   cursor: not-allowed;
   background: rgba(255, 255, 255, 0.05);
 }
 
-/* Loading States */
+/* ===== LOADING STATES =====
+ * 
+ * Visual indicators for when content is being fetched or processed.
+ * Includes loading text and animated spinner for AI content.
+ */
 .loading { 
   color: var(--gray-600); 
   font-style: italic;
 }
 
+/* Animated loading spinner */
 .spinner { 
   display: inline-block; 
   width: 16px; 
@@ -286,23 +385,32 @@ tbody tr.close {
   margin-right: 8px;
 }
 
+/* Spinner rotation animation */
 @keyframes spin { 
   to { transform: rotate(360deg); } 
 }
 
-/* Section Dividers */
+/* ===== SECTION DIVIDERS =====
+ * 
+ * Visual separators between major page sections for better readability.
+ */
 .section-divider { 
   height: 1px; 
   background: var(--gray-200); 
   margin: 24px 0; 
 }
 
-/* Incentives Section */
+/* ===== INCENTIVES SECTION =====
+ * 
+ * Weekly incentive system showing current winner and next week's incentive.
+ * Each incentive item has an icon, label, and value.
+ */
 .incentives { 
   display: grid; 
   gap: 16px; 
 }
 
+/* Individual incentive item */
 .incentive-item { 
   display: flex; 
   align-items: center; 
@@ -313,6 +421,7 @@ tbody tr.close {
   border: 1px solid var(--gray-200);
 }
 
+/* Incentive icon styling */
 .incentive-icon { 
   font-size: 20px; 
   padding: 8px; 
@@ -321,10 +430,12 @@ tbody tr.close {
   color: var(--primary);
 }
 
+/* Incentive text content */
 .incentive-content { 
   flex: 1;
 }
 
+/* Incentive category label */
 .incentive-label { 
   font-size: 12px; 
   font-weight: 600; 
@@ -333,31 +444,40 @@ tbody tr.close {
   letter-spacing: 0.05em;
 }
 
+/* Incentive value (winner name, amount, etc.) */
 .incentive-value { 
   font-size: 16px; 
   font-weight: 600; 
   color: var(--gray-800);
 }
 
-/* Top Performers & Busts */
+/* ===== TOP PERFORMERS & BUSTS SECTION =====
+ * 
+ * Shows the best and worst performing NFL players from the week.
+ * Split into two columns: Top Performers (green scores) and Top Busts (red scores).
+ * Each player shows rank, name, and fantasy points.
+ */
 .performers-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 1fr 1fr; /* Two equal columns */
   gap: 16px;
 }
 
+/* Section header styling */
 .performers-section h3 {
   font-size: 16px;
   margin: 0 0 12px;
   color: var(--gray-700);
 }
 
+/* List of players */
 .performers-list {
   list-style: none;
   padding: 0;
   margin: 0;
 }
 
+/* Individual player item */
 .performers-list li {
   display: flex;
   align-items: center;
@@ -366,52 +486,66 @@ tbody tr.close {
   border-bottom: 1px solid var(--gray-100);
 }
 
+/* Remove border from last item */
 .performers-list li:last-child {
   border-bottom: none;
 }
 
+/* Player ranking number */
 .player-rank {
   font-weight: 600;
   color: var(--gray-600);
   min-width: 24px;
 }
 
+/* Player name */
 .player-name {
   flex: 1;
   font-size: 14px;
 }
 
+/* Player fantasy points */
 .player-score {
   font-weight: 600;
-  font-variant-numeric: tabular-nums;
+  font-variant-numeric: tabular-nums; /* Aligns numbers properly */
 }
 
+/* Top performers get green scores */
 .top-performers .player-score {
   color: var(--success);
 }
 
+/* Top busts get red scores */
 .top-busts .player-score {
   color: var(--danger);
 }
 
-/* Position Leaders */
+/* ===== POSITION LEADERS SECTION =====
+ * 
+ * Displays the best and worst players for each fantasy position (QB, RB, WR, TE, K, DEF).
+ * Each position shows both a "boom" (best) and "bust" (worst) player.
+ * Players are displayed in a grid with position icons and performance data.
+ */
 .position-leaders {
   display: grid;
   gap: 16px;
 }
 
+/* Position section header */
 .position-section h3 {
   font-size: 16px;
   margin: 0 0 12px;
   color: var(--gray-700);
 }
 
+/* Grid layout for boom/bust pairs */
 .position-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 1fr 1fr; /* Boom | Bust */
   gap: 12px;
 }
 
+/* Individual position item (boom or bust player) */
 .position-item {
   display: flex;
   align-items: center;
@@ -422,6 +556,7 @@ tbody tr.close {
   border: 1px solid var(--gray-200);
 }
 
+/* Position abbreviation icon (QB, RB, WR, etc.) */
 .position-icon {
   font-size: 16px;
   padding: 4px 6px;
@@ -430,10 +565,12 @@ tbody tr.close {
   color: var(--primary);
 }
 
+/* Player information container */
 .position-content {
   flex: 1;
 }
 
+/* Position label (e.g., "Quarterback") */
 .position-label {
   font-size: 12px;
   font-weight: 600;
@@ -441,19 +578,26 @@ tbody tr.close {
   text-transform: uppercase;
 }
 
+/* Player name and stats */
 .position-value {
   font-size: 14px;
   font-weight: 600;
   color: var(--gray-800);
 }
 
-/* Awards Section */
+/* ===== AWARDS SECTION =====
+ * 
+ * Weekly recognition categories highlighting notable achievements.
+ * Each award has an icon, title, and description.
+ * Awards are displayed in a vertical list with separators.
+ */
 .awards {
   list-style: none;
   padding: 0;
   margin: 0;
 }
 
+/* Individual award item */
 .award {
   display: flex;
   align-items: flex-start;
@@ -462,23 +606,27 @@ tbody tr.close {
   border-bottom: 1px solid var(--gray-100);
 }
 
+/* Remove border from last award */
 .award:last-child {
   border-bottom: none;
 }
 
+/* Award icon (trophy, medal, etc.) */
 .award-icon {
   font-size: 20px;
   padding: 6px 8px;
-  background: var(--warning);
+  background: var(--warning); /* Orange background for awards */
   border-radius: 6px;
   color: white;
   flex-shrink: 0;
 }
 
+/* Award text content */
 .award-body {
   flex: 1;
 }
 
+/* Award category title */
 .award-title {
   font-weight: 600;
   font-size: 15px;
@@ -486,19 +634,26 @@ tbody tr.close {
   color: var(--gray-800);
 }
 
+/* Award description text */
 .award-text {
   font-size: 13px;
   color: var(--gray-600);
   line-height: 1.4;
 }
 
-/* Awards Grid */
+/* ===== AWARDS GRID LAYOUT =====
+ * 
+ * Alternative awards display using a grid layout instead of list.
+ * Each award item is displayed as a card with icon and content.
+ * Used for different award presentation styles.
+ */
 .awards-grid { 
   display: grid; 
-  grid-template-columns: 1fr; 
+  grid-template-columns: 1fr; /* Single column layout */
   gap: 10px; 
 }
 
+/* Individual award item in grid format */
 .award-item {
   display: flex;
   align-items: flex-start;
@@ -509,6 +664,7 @@ tbody tr.close {
   padding: 10px;
 }
 
+/* Award icon in pill format */
 .award-icon-pill {
   font-size: 20px;
   line-height: 1;
@@ -518,44 +674,56 @@ tbody tr.close {
   flex-shrink: 0;
 }
 
+/* Award text content container */
 .award-content {
   flex: 1;
 }
 
+/* Award title in grid format */
 .award-title { 
   font-weight: bold; 
   font-size: 15px; 
   margin-bottom: 2px; 
 }
 
+/* Award description in grid format */
 .award-text { 
   font-size: 13px; 
   line-height: 1.4; 
 }
 
-/* Weekly Incentive Card */
+/* ===== WEEKLY INCENTIVE CARD =====
+ * 
+ * Prominent card displaying the current week's incentive winner and next week's incentive.
+ * Uses warm orange/yellow gradient to draw attention.
+ * Shows winner name in green with shadow effect, or "pending" if not yet determined.
+ */
 .incentive-card {
-  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); /* Warm gradient */
   border: 2px solid var(--warning);
   box-shadow: 0 8px 25px rgba(245, 158, 11, 0.15);
 }
 
+/* Enhanced hover effect for incentive card */
 .incentive-card:hover {
   transform: translateY(-3px);
   box-shadow: 0 12px 35px rgba(245, 158, 11, 0.25);
 }
 
+/* Content layout within incentive card */
 .incentive-content {
   display: grid;
   gap: 20px;
 }
 
+/* Individual incentive section (winner, next week, etc.) */
 .incentive-section {
   display: flex;
   flex-direction: column;
   gap: 8px;
 }
 
+/* Incentive category label */
 .incentive-label {
   font-size: 12px;
   font-weight: 600;
@@ -564,6 +732,7 @@ tbody tr.close {
   color: var(--warning);
 }
 
+/* Incentive text content */
 .incentive-title, .incentive-next {
   font-size: 16px;
   font-weight: 600;
@@ -571,12 +740,14 @@ tbody tr.close {
   line-height: 1.4;
 }
 
+/* Winner display section */
 .incentive-winner {
   display: flex;
   align-items: center;
   gap: 8px;
 }
 
+/* Winner name styling with green color and shadow */
 .winner-text {
   font-size: 18px;
   font-weight: 700;
@@ -584,6 +755,7 @@ tbody tr.close {
   text-shadow: 0 2px 4px rgba(16, 185, 129, 0.2);
 }
 
+/* Pending state when winner not yet determined */
 .pending-text {
   font-size: 16px;
   font-weight: 600;
@@ -591,32 +763,49 @@ tbody tr.close {
   font-style: italic;
 }
 
-/* Player Highlights Card */
+/* ===== PLAYER HIGHLIGHTS CARD =====
+ * 
+ * Card displaying top NFL performers and notable player statistics.
+ * Uses cool blue gradient to complement the incentive card's warm colors.
+ * Contains the "Top NFL Performers" and "Top NFL Busts" sections.
+ */
 .highlights-card {
-  background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+  background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%); /* Cool blue gradient */
   border: 2px solid var(--accent);
   box-shadow: 0 8px 25px rgba(6, 182, 212, 0.15);
 }
 
+/* Hover effect for highlights card */
 .highlights-card:hover {
   transform: translateY(-2px);
   box-shadow: 0 12px 35px rgba(6, 182, 212, 0.25);
 }
 
-/* Scores Section */
+/* ===== WEEKLY SCORES SECTION =====
+ * 
+ * Displays all fantasy football matchups from the current week.
+ * Each matchup shows two teams with their logos, names, records, and final scores.
+ * Winning teams are highlighted with green backgrounds and special styling.
+ * Uses card-based layout for better visual separation.
+ */
 .scores-section h2 {
   text-align: center;
 }
 
-/* Desktop Scores - Card Layout */
+/* ===== DESKTOP SCORES - CARD LAYOUT =====
+ * 
+ * Grid layout for weekly matchup cards on desktop.
+ * Each card shows home team | VS | away team with scores.
+ */
 .desktop-scores {
   display: grid;
   gap: 16px;
 }
 
+/* Individual matchup card */
 .score-matchup-card {
   display: grid;
-  grid-template-columns: 1fr auto 1fr;
+  grid-template-columns: 1fr auto 1fr; /* Home Team | VS | Away Team */
   gap: 16px;
   align-items: center;
   padding: 20px;
@@ -627,11 +816,18 @@ tbody tr.close {
   transition: all 0.2s ease;
 }
 
+/* Hover effect for matchup cards */
 .score-matchup-card:hover {
   transform: translateY(-2px);
   box-shadow: var(--shadow-md);
 }
 
+/* ===== TEAM SCORE STYLING =====
+ * 
+ * Individual team display within each matchup card.
+ * Shows team logo, name, record, and final score.
+ * Winning teams get special green background and white text.
+ */
 .score-team {
   display: flex;
   align-items: center;
@@ -642,22 +838,32 @@ tbody tr.close {
   transition: all 0.2s ease;
 }
 
+/* Winner team styling with green background */
 .score-team.winner {
   background: var(--success);
   color: white;
   box-shadow: var(--shadow-md);
 }
 
+/* Winner team record text color adjustment */
 .score-team.winner .team-record {
   color: rgba(255, 255, 255, 0.8);
 }
 
+/* ===== TEAM INFORMATION DISPLAY =====
+ * 
+ * Team details within each matchup card including logo, name, record, and score.
+ * Information is stacked vertically for clear hierarchy.
+ */
+
+/* Container for team details */
 .team-info {
   display: flex;
   flex-direction: column;
   gap: 4px;
 }
 
+/* Team name row with logo and name */
 .team-name-row {
   display: flex;
   align-items: center;
@@ -666,6 +872,7 @@ tbody tr.close {
   font-size: 16px;
 }
 
+/* Team logo styling */
 .team-logo {
   width: 32px;
   height: 32px;
@@ -673,20 +880,29 @@ tbody tr.close {
   object-fit: cover;
 }
 
+/* Team win-loss record */
 .team-record {
   font-size: 12px;
   color: var(--gray-600);
   font-weight: 500;
 }
 
+/* Team final score display */
 .team-score {
   font-size: 24px;
   font-weight: 700;
-  font-variant-numeric: tabular-nums;
+  font-variant-numeric: tabular-nums; /* Aligns numbers properly */
   min-width: 48px;
   text-align: center;
 }
 
+/* ===== MATCHUP VS SECTION =====
+ * 
+ * Center section between teams showing "VS" text and winner indicator.
+ * Provides visual separation and highlights the winning team.
+ */
+
+/* Container for VS text and winner indicator */
 .score-vs {
   display: flex;
   flex-direction: column;
@@ -694,6 +910,7 @@ tbody tr.close {
   gap: 8px;
 }
 
+/* VS text styling */
 .vs-text {
   font-size: 14px;
   font-weight: 600;
@@ -702,11 +919,13 @@ tbody tr.close {
   letter-spacing: 0.05em;
 }
 
+/* Winner indicator (trophy or checkmark) with bounce animation */
 .winner-indicator {
   font-size: 24px;
   animation: bounce 0.6s ease-in-out;
 }
 
+/* Bounce animation for winner indicator */
 @keyframes bounce {
   0%, 20%, 50%, 80%, 100% {
     transform: translateY(0);
@@ -719,33 +938,51 @@ tbody tr.close {
   }
 }
 
-/* Utility Classes */
+/* ===== UTILITY CLASSES =====
+ * 
+ * Helper classes for common styling needs throughout the page.
+ * These classes provide consistent styling for repeated elements.
+ */
+
+/* Muted text for secondary information */
 .muted {
   color: var(--gray-500);
   font-style: italic;
 }
 
+/* Hidden elements (used for mobile/desktop switching) */
 .hidden {
   display: none !important;
 }
 
+/* Muted text with top margin for spacing */
 .muted-with-margin {
   color: var(--gray-500);
   font-style: italic;
   margin-top: 6px;
 }
 
-/* Responsive Design */
+/* ===== RESPONSIVE DESIGN =====
+ * 
+ * Media queries to adapt the layout for different screen sizes.
+ * On smaller screens, the 3-column grid collapses to a single column.
+ * Mobile-specific layouts are shown for scores, standings, and booms & busts.
+ */
+
+/* Large tablets and small desktops */
 @media (max-width: 1200px) {
+  /* Collapse to single column layout */
   .grid {
     grid-template-columns: 1fr;
     grid-template-rows: auto auto auto auto auto;
   }
   
+  /* Stack highlights and incentive vertically */
   .overview-row {
     grid-template-columns: 1fr;
   }
   
+  /* Stack performers and position grids vertically */
   .performers-grid {
     grid-template-columns: 1fr;
   }
@@ -755,31 +992,43 @@ tbody tr.close {
   }
 }
 
+/* Medium tablets and large phones */
 @media (max-width: 768px) {
+  /* Reduce body padding for smaller screens */
   body {
     padding: 16px;
   }
   
+  /* Reduce card padding for compact layout */
   .card {
     padding: 16px;
   }
   
+  /* Stack matchup teams vertically on medium screens */
   .score-matchup-card {
-    grid-template-columns: 1fr;
+    grid-template-columns: 1fr; /* Single column layout */
     gap: 12px;
   }
   
+  /* Center team information */
   .score-team {
     justify-content: center;
   }
 }
 
-/* ===== MISSING STYLES FOR BOOMS & BUSTS ===== */
+/* ===== BOOMS & BUSTS SECTION =====
+ * 
+ * Shows the best and worst performing NFL players for each fantasy position.
+ * Each position (QB, RB, WR, TE, K, DEF) displays both a "boom" and "bust" player.
+ * Boom players have green left borders, bust players have red left borders.
+ * Players show name, team, fantasy points, and NFL team logo.
+ */
 .bb-grid {
   display: grid;
   gap: 16px;
 }
 
+/* Individual position card (e.g., "Quarterbacks") */
 .bb-position-card {
   background: var(--gray-50);
   border: 1px solid var(--gray-200);
@@ -788,12 +1037,21 @@ tbody tr.close {
   transition: all 0.2s ease;
 }
 
+/* Hover effect for position cards */
 .bb-position-card:hover {
   transform: translateY(-2px);
   box-shadow: var(--shadow-md);
   border-color: var(--gray-300);
 }
 
+/* ===== BOOMS & BUSTS PLAYER STYLING =====
+ * 
+ * Individual player cards within each position section.
+ * Boom players have green left borders, bust players have red left borders.
+ * Each player shows type, name, team, and fantasy points.
+ */
+
+/* Position header (e.g., "Quarterbacks") */
 .bb-position-header {
   font-size: 14px;
   font-weight: 700;
@@ -808,34 +1066,46 @@ tbody tr.close {
   border: 1px solid var(--gray-200);
 }
 
+/* Grid layout for boom/bust player pairs */
 .bb-players {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 1fr 1fr; /* Boom | Bust */
   gap: 12px;
 }
 
+/* Individual player card */
 .bb-player {
   background: white;
   border-radius: 10px;
   padding: 12px;
   border: 1px solid var(--gray-200);
   transition: all 0.2s ease;
-  position: relative;
+  position: relative; /* For NFL logo positioning */
 }
 
+/* Hover effect for player cards */
 .bb-player:hover {
   transform: translateY(-1px);
   box-shadow: var(--shadow-sm);
 }
 
+/* Boom player styling with green left border */
 .bb-player.boom {
   border-left: 4px solid var(--success);
 }
 
+/* Bust player styling with red left border */
 .bb-player.bust {
   border-left: 4px solid var(--danger);
 }
 
+/* ===== PLAYER CONTENT AND DETAILS =====
+ * 
+ * Player information display including type badge, name, team, and fantasy points.
+ * Each player card shows comprehensive details in a compact format.
+ */
+
+/* Player header with type badge */
 .bb-player-header {
   display: flex;
   align-items: center;
@@ -843,6 +1113,7 @@ tbody tr.close {
   margin-bottom: 8px;
 }
 
+/* Player type badge (BOOM or BUST) */
 .bb-player-type {
   font-size: 11px;
   font-weight: 600;
@@ -852,20 +1123,24 @@ tbody tr.close {
   border-radius: 4px;
 }
 
+/* Boom player type badge styling */
 .bb-player.boom .bb-player-type {
   background: #ecfdf5;
   color: var(--success);
 }
 
+/* Bust player type badge styling */
 .bb-player.bust .bb-player-type {
   background: #fef2f2;
   color: var(--danger);
 }
 
+/* Player information container */
 .bb-player-content {
   margin-bottom: 8px;
 }
 
+/* Player name display */
 .bb-player-name {
   font-weight: 600;
   font-size: 13px;
@@ -874,22 +1149,26 @@ tbody tr.close {
   line-height: 1.3;
 }
 
+/* Player's fantasy team name */
 .bb-player-team {
   font-size: 11px;
   color: var(--gray-600);
   margin-bottom: 4px;
 }
 
+/* Player's fantasy points */
 .bb-player-points {
   font-weight: 700;
   font-size: 16px;
   color: var(--success);
 }
 
+/* Bust player points in red */
 .bb-player.bust .bb-player-points {
   color: var(--danger);
 }
 
+/* NFL team logo positioned in top-right corner */
 .bb-nfl-logo {
   position: absolute;
   top: 8px;
@@ -901,6 +1180,7 @@ tbody tr.close {
   background: white;
 }
 
+/* Message when no player data is available */
 .bb-no-data {
   text-align: center;
   padding: 24px;
@@ -908,46 +1188,66 @@ tbody tr.close {
   font-style: italic;
 }
 
-/* ===== MISSING STYLES FOR STANDINGS ===== */
+/* ===== DESKTOP STANDINGS SECTION =====
+ * 
+ * League standings displayed as individual team cards instead of a table.
+ * Each team shows rank, name, record, and total points.
+ * Playoff teams and cutoff teams get special visual treatment.
+ */
+
+/* Grid layout for standings cards */
 .desktop-standings {
   display: grid;
   gap: 12px;
 }
 
+/* Individual team standing card */
 .standing-team-card {
   background: white;
   border: 1px solid var(--gray-200);
   border-radius: 12px;
   padding: 16px;
   display: grid;
-  grid-template-columns: auto 1fr auto;
+  grid-template-columns: auto 1fr auto; /* Rank | Team Info | Stats */
   gap: 16px;
   align-items: center;
   transition: all 0.2s ease;
 }
 
+/* Hover effect for team cards */
 .standing-team-card:hover {
   transform: translateY(-1px);
   box-shadow: var(--shadow-sm);
   border-color: var(--gray-300);
 }
 
+/* Playoff team styling with green gradient */
 .standing-team-card.playoff {
   background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
   border-color: var(--success);
   box-shadow: 0 2px 8px rgba(16, 185, 129, 0.1);
 }
 
+/* Enhanced hover effect for playoff teams */
 .standing-team-card.playoff:hover {
   box-shadow: 0 4px 12px rgba(16, 185, 129, 0.15);
 }
 
+/* Cutoff team styling (last playoff spot) with warning colors */
 .standing-team-card.cutoff {
   border-bottom: 3px dotted var(--success);
   background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
   border-color: var(--warning);
 }
 
+/* ===== STANDING RANK DISPLAY =====
+ * 
+ * Team ranking information including position number and playoff status.
+ * Rank numbers are prominently displayed in primary blue color.
+ * Playoff teams get an animated badge indicator.
+ */
+
+/* Container for rank information */
 .standing-rank {
   display: flex;
   flex-direction: column;
@@ -955,6 +1255,7 @@ tbody tr.close {
   gap: 4px;
 }
 
+/* Team position number (1st, 2nd, etc.) */
 .rank-number {
   font-size: 18px;
   font-weight: 800;
@@ -962,22 +1263,32 @@ tbody tr.close {
   line-height: 1;
 }
 
+/* Playoff qualification badge with pulse animation */
 .playoff-badge {
   font-size: 14px;
   animation: pulse 2s infinite;
 }
 
+/* Pulse animation for playoff badge */
 @keyframes pulse {
   0%, 100% { opacity: 1; }
   50% { opacity: 0.7; }
 }
 
+/* ===== STANDING TEAM INFORMATION =====
+ * 
+ * Team details within standings cards including name and movement indicators.
+ * Shows how teams have moved up or down in rankings from previous week.
+ */
+
+/* Container for team information */
 .standing-team-info {
   display: flex;
   flex-direction: column;
   gap: 4px;
 }
 
+/* Team name in standings */
 .standing-team-info .team-name {
   font-weight: 600;
   font-size: 14px;
@@ -985,6 +1296,7 @@ tbody tr.close {
   line-height: 1.3;
 }
 
+/* Movement indicator showing rank change */
 .movement-indicator {
   font-size: 11px;
   font-weight: 600;
@@ -994,16 +1306,25 @@ tbody tr.close {
   width: fit-content;
 }
 
+/* Upward movement indicator (green) */
 .movement-indicator.up {
   background: #ecfdf5;
   color: var(--success);
 }
 
+/* Downward movement indicator (red) */
 .movement-indicator.down {
   background: #fef2f2;
   color: var(--danger);
 }
 
+/* ===== STANDING STATISTICS =====
+ * 
+ * Team performance statistics displayed on the right side of standings cards.
+ * Shows win-loss record and total fantasy points for the season.
+ */
+
+/* Container for team statistics */
 .standing-stats {
   display: flex;
   flex-direction: column;
@@ -1011,6 +1332,7 @@ tbody tr.close {
   gap: 4px;
 }
 
+/* Win-loss record badge */
 .record-badge {
   background: var(--gray-100);
   color: var(--gray-700);
@@ -1022,6 +1344,7 @@ tbody tr.close {
   min-width: 60px;
 }
 
+/* Total fantasy points display */
 .points-display {
   font-size: 16px;
   font-weight: 700;
@@ -1029,30 +1352,47 @@ tbody tr.close {
   line-height: 1;
 }
 
-/* ===== MISSING STYLES FOR WEEKLY SCORES ===== */
+/* ===== DESKTOP WEEKLY SCORES - ALTERNATIVE LAYOUT =====
+ * 
+ * Alternative weekly scores layout with different styling than the main scores section.
+ * Uses gray background and larger border radius for distinct appearance.
+ * Each matchup shows teams in a 3-column grid layout.
+ */
+
+/* Grid layout for alternative score cards */
 .desktop-scores {
   display: grid;
   gap: 16px;
 }
 
+/* Alternative matchup card styling */
 .score-matchup-card {
   background: var(--gray-50);
   border: 1px solid var(--gray-200);
   border-radius: 16px;
   padding: 20px;
   display: grid;
-  grid-template-columns: 1fr auto 1fr;
+  grid-template-columns: 1fr auto 1fr; /* Home Team | VS | Away Team */
   gap: 12px;
   align-items: center;
   transition: all 0.2s ease;
 }
 
+/* Hover effect for alternative score cards */
 .score-matchup-card:hover {
   transform: translateY(-2px);
   box-shadow: var(--shadow-md);
   border-color: var(--gray-300);
 }
 
+/* ===== ALTERNATIVE TEAM SCORE STYLING =====
+ * 
+ * Team display styling for the alternative weekly scores layout.
+ * Teams are displayed vertically with centered content.
+ * Winning teams get special green styling and enhanced hover effects.
+ */
+
+/* Alternative team score container */
 .score-team {
   display: flex;
   flex-direction: column;
@@ -1065,21 +1405,32 @@ tbody tr.close {
   transition: all 0.2s ease;
 }
 
+/* Winner team styling with green border and gradient background */
 .score-team.winner {
   border-color: var(--success);
   background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
   box-shadow: 0 4px 12px rgba(16, 185, 129, 0.15);
 }
 
+/* Enhanced hover effect for winning teams */
 .score-team.winner:hover {
   transform: translateY(-1px);
   box-shadow: 0 6px 16px rgba(16, 185, 129, 0.2);
 }
 
+/* ===== ALTERNATIVE TEAM INFORMATION =====
+ * 
+ * Team details styling for the alternative scores layout.
+ * Teams are displayed with smaller logos and centered information.
+ * Information includes logo, name, and win-loss record.
+ */
+
+/* Team information container */
 .team-info {
   margin-bottom: 12px;
 }
 
+/* Team name row with logo and name */
 .team-name-row { 
   display: flex; 
   align-items: center; 
@@ -1087,6 +1438,7 @@ tbody tr.close {
   justify-content: center; 
 }
 
+/* Smaller team logo for alternative layout */
 .team-logo { 
   width: 22px; 
   height: 22px; 
@@ -1095,6 +1447,7 @@ tbody tr.close {
   display: block; 
 }
 
+/* Team name display */
 .team-name {
   font-weight: 700;
   font-size: 16px;
@@ -1103,12 +1456,20 @@ tbody tr.close {
   line-height: 1.3;
 }
 
+/* Team win-loss record */
 .team-record {
   font-size: 12px;
   color: var(--gray-500);
   font-weight: 500;
 }
 
+/* ===== ALTERNATIVE TEAM SCORE DISPLAY =====
+ * 
+ * Team final score styling for the alternative scores layout.
+ * Regular scores are displayed in gray, winning scores in green with shadow.
+ */
+
+/* Team final score display */
 .team-score {
   font-size: 28px;
   font-weight: 800;
@@ -1116,41 +1477,64 @@ tbody tr.close {
   line-height: 1;
 }
 
+/* Winner score with green color and shadow effect */
 .winner-score {
   color: var(--success);
   text-shadow: 0 2px 4px rgba(16, 185, 129, 0.2);
 }
 
-/* ===== MISSING STYLES FOR MOBILE LAYOUTS ===== */
+/* ===== MOBILE LAYOUT COMPONENTS =====
+ * 
+ * Mobile-specific layouts for scores, standings, and booms & busts.
+ * These components are hidden on desktop and shown on mobile devices.
+ * Mobile booms & busts appear at the bottom of the page below standings.
+ */
+
+/* Mobile layout components - hidden by default on desktop */
 .mobile-scores, .mobile-standings, .mobile-bb {
   display: none;
 }
 
-/* Mobile Booms & Busts at bottom - hidden on desktop */
+/* Mobile booms & busts positioned at bottom - hidden on desktop */
 .mobile-bb-bottom {
   display: none;
 }
 
-/* ===== MISSING STYLES FOR LEGACY TABLES ===== */
+/* ===== LEGACY TABLE STYLES =====
+ * 
+ * Original table-based layouts for scores, standings, and booms & busts.
+ * These are kept for backward compatibility but are typically hidden.
+ * Hidden elements use !important to ensure they don't display.
+ */
+
+/* Legacy table display styles */
 .scores, .standings, .bb-table {
   display: table;
 }
 
-/* Ensure hidden elements are properly hidden */
+/* Ensure hidden legacy elements are properly hidden with !important */
 .standings.hidden, .scores.hidden, .bb-table.hidden {
   display: none !important;
 }
 
-/* ===== MISSING STYLES FOR AWARDS ===== */
+/* ===== AWARDS SECTION - ALTERNATIVE STYLING =====
+ * 
+ * Alternative awards display with card-based layout and hover effects.
+ * Each award has a circular icon with gradient background and interactive hover states.
+ * Awards are displayed in a grid layout with consistent spacing.
+ */
+
+/* Awards grid container */
 .awards {
   list-style: none;
   padding: 0;
   margin: 0;
   display: grid;
-  grid-template-columns: 1fr;
+  grid-template-columns: 1fr; /* Single column layout */
   gap: 12px;
 }
 
+/* Individual award card */
 .award {
   display: flex;
   align-items: flex-start;
@@ -1162,12 +1546,14 @@ tbody tr.close {
   transition: all 0.2s ease;
 }
 
+/* Award hover effect with background change and shadow */
 .award:hover {
   background: white;
   box-shadow: var(--shadow-md);
   transform: translateY(-1px);
 }
 
+/* Circular award icon with gradient background */
 .award-icon {
   width: 32px;
   height: 32px;
@@ -1183,29 +1569,40 @@ tbody tr.close {
   box-shadow: var(--shadow);
 }
 
+/* Award content container */
 .award-body {
   display: grid;
   gap: 4px;
 }
 
+/* Award category title */
 .award-title {
   font-weight: 700;
   font-size: 14px;
   color: var(--gray-800);
 }
 
+/* Award description text */
 .award-text {
   font-size: 13px;
   color: var(--gray-600);
 }
 
-/* ===== MISSING STYLES FOR NAVIGATION ===== */
+/* ===== NAVIGATION COMPONENTS - ALTERNATIVE STYLING =====
+ * 
+ * Alternative navigation styling with glass-morphism effects.
+ * Buttons have semi-transparent backgrounds with backdrop blur.
+ * Includes hover effects and disabled states for better UX.
+ */
+
+/* Navigation container */
 .nav {
   display: flex;
   align-items: center;
   gap: 12px;
 }
 
+/* Navigation button with glass-morphism effect */
 .btn {
   display: inline-flex;
   align-items: center;
@@ -1219,21 +1616,30 @@ tbody tr.close {
   font-size: 14px;
   font-weight: 600;
   transition: all 0.2s ease;
-  backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px); /* Glass-morphism effect */
 }
 
+/* Button hover effect with enhanced transparency */
 .btn:hover {
   background: rgba(255,255,255,0.2);
   border-color: rgba(255,255,255,0.5);
   transform: translateY(-1px);
 }
 
+/* Disabled button state */
 .btn.disabled {
   pointer-events: none;
   opacity: 0.5;
 }
 
-/* ===== MISSING STYLES FOR TYPOGRAPHY ===== */
+/* ===== TYPOGRAPHY - ALTERNATIVE STYLING =====
+ * 
+ * Alternative typography styles for headers and text elements.
+ * Includes text shadows and letter spacing for enhanced readability.
+ * These styles complement the main typography system.
+ */
+
+/* Alternative h1 styling with enhanced shadows */
 h1 {
   margin: 0;
   font-size: 28px;
@@ -1242,6 +1648,7 @@ h1 {
   text-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
 
+/* Alternative h2 styling */
 h2 {
   margin: 0 0 16px;
   font-size: 20px;
@@ -1708,32 +2115,32 @@ tbody tr:hover {
     width: 100%;
   }
   
-  /* Mobile: Hide tables and desktop layouts, show simplified layouts */
+    /* Mobile: Hide desktop tables and layouts, show mobile-specific layouts */
   .scores, .standings, .bb-table, .bb-grid, .desktop-scores, .desktop-standings {
     display: none !important;
   }
   
-  /* Hide the original left sidebar booms & busts on mobile */
+  /* Hide the original left sidebar booms & busts on mobile to prevent duplication */
   .bb-aside {
     display: none !important;
   }
   
-  /* Mobile scores - card-based layout */
+  /* Mobile scores - simplified card layout for small screens */
   .mobile-scores {
     display: block;
   }
   
-  /* Mobile standings - list layout */
+  /* Mobile standings - compact list layout */
   .mobile-standings {
     display: block;
   }
   
-  /* Mobile booms/busts - card layout */
+  /* Mobile booms/busts - simplified card layout */
   .mobile-bb {
     display: block;
   }
   
-  /* Show mobile booms & busts at bottom */
+  /* Show mobile booms & busts at bottom of page (below standings) */
   .mobile-bb-bottom {
     display: block;
   }
