@@ -82,11 +82,12 @@ body {
 .grid { 
   display: grid; 
   grid-template-columns: 1fr 2.3fr 1.2fr; /* Left | Center | Right */
-  grid-template-rows: auto auto auto 1fr;  /* Header | Overview | Highlights | Main */
-  gap: 24px; 
+  grid-template-rows: auto auto auto auto;  /* Header | Overview | Highlights | Main - all auto-sized */
+  gap: 20px; /* Reduced gap for more compact layout */
   min-height: calc(100vh - 40px);
   max-width: 1400px;
   margin: 0 auto;
+  align-items: start; /* Align items to start instead of stretching */
 }
 
 /* Overview section spans all columns at the top */
@@ -95,22 +96,34 @@ body {
   grid-row: 2;         /* Second row */
 }
 
-/* Weekly scores in center column, stretches to bottom */
+/* Weekly scores in center column, sizes to match booms & busts height */
 .scores-section { 
   grid-column: 2;       /* Center column */
   grid-row: 4;          /* Fourth row (main content) */
+  height: fit-content;  /* Size to content instead of stretching */
+  display: flex;
+  flex-direction: column;
+  border: 2px solid blue; /* Temporary debugging border */
 }
 
 /* Left sidebar: Booms & Busts section */
 .bb-aside { 
   grid-column: 1;       /* First column */
   grid-row: 4;          /* Fourth row (main content) */
+  height: fit-content;  /* Only take height needed for content */
+  display: flex;
+  flex-direction: column;
+  border: 2px solid red; /* Temporary debugging border */
 }
 
 /* Right sidebar: League standings */
 .standings-aside { 
   grid-column: 3;       /* Third column */
   grid-row: 4;          /* Fourth row (main content) */
+  height: fit-content;  /* Size to content instead of stretching */
+  display: flex;
+  flex-direction: column;
+  border: 2px solid green; /* Temporary debugging border */
 }
 
 /* Row below Overview: Player highlights and weekly incentive side by side */
@@ -251,9 +264,11 @@ table {
 
 /* Table cell styling */
 th, td { 
-  padding: 16px 12px; 
+  padding: 8px 8px; /* More compact padding for tighter layout */
   border-bottom: 1px solid var(--gray-200); 
   vertical-align: middle; 
+  font-size: 13px; /* Smaller font for more compact rows */
+  line-height: 1.2; /* Tighter line height for more compact rows */
 }
 
 /* Table header styling */
@@ -261,11 +276,12 @@ th {
   text-align: left; 
   color: var(--gray-600); 
   font-weight: 600; 
-  font-size: 12px; 
+  font-size: 11px; /* Smaller font for more compact header */
   text-transform: uppercase; 
   letter-spacing: .05em;
   background: var(--gray-50);
   border-bottom: 2px solid var(--gray-200);
+  padding: 6px 8px; /* More compact header padding */
 }
 
 /* Alternating row colors for readability */
@@ -1025,7 +1041,9 @@ tbody tr.close {
  */
 .bb-grid {
   display: grid;
-  gap: 12px;
+  grid-auto-rows: min-content; /* Size rows to fit content exactly */
+  gap: 8px; /* Reduced gap for more compact layout */
+  height: fit-content; /* Only take height needed for content */
 }
 
 /* Individual position card (e.g., "Quarterbacks") */
@@ -1033,7 +1051,7 @@ tbody tr.close {
   background: white;
   border: 1px solid var(--gray-200);
   border-radius: 8px;
-  padding: 12px;
+  padding: 8px; /* Reduced padding for more compact layout */
   box-shadow: var(--shadow-sm);
 }
 
@@ -1051,8 +1069,8 @@ tbody tr.close {
   text-transform: uppercase;
   letter-spacing: 0.05em;
   text-align: center;
-  margin-bottom: 10px;
-  padding: 6px 10px;
+  margin-bottom: 8px; /* Reduced margin for more compact layout */
+  padding: 4px 8px; /* Reduced padding for more compact layout */
   background: var(--gray-50);
   border-radius: 6px;
   border: 1px solid var(--gray-200);
@@ -1231,7 +1249,7 @@ tbody tr.close {
 /* Grid layout for standings cards */
 .desktop-standings {
   display: grid;
-  gap: 12px;
+  gap: 8px; /* Reduced gap for more compact layout */
 }
 
 /* Individual team standing card */
@@ -1239,10 +1257,10 @@ tbody tr.close {
   background: white;
   border: 1px solid var(--gray-200);
   border-radius: 12px;
-  padding: 16px;
+  padding: 12px; /* Reduced padding for more compact layout */
   display: grid;
   grid-template-columns: auto 1fr auto; /* Rank | Team Info | Stats */
-  gap: 16px;
+  gap: 12px; /* Reduced gap for more compact layout */
   align-items: center;
   transition: all 0.2s ease;
 }
