@@ -181,6 +181,7 @@
             <div class="mobile-score-team-details">
               <div class="mobile-team-name">{{ m.home_team }}</div>
               {% if m.home_owner %}<div class="mobile-team-owner">{{ m.home_owner }}</div>{% endif %}
+              <div class="mobile-team-record">{{ m.home_wins }}-{{ m.home_losses }}-{{ m.home_ties }}</div>
             </div>
             <div class="mobile-score-home">{{ m.home_score }}</div>
           </div>
@@ -196,6 +197,7 @@
             <div class="mobile-score-team-details">
               <div class="mobile-team-name">{{ m.away_team }}</div>
               {% if m.away_owner %}<div class="mobile-team-owner">{{ m.away_owner }}</div>{% endif %}
+              <div class="mobile-team-record">{{ m.away_wins }}-{{ m.away_losses }}-{{ m.away_ties }}</div>
             </div>
             <div class="mobile-score-away">{{ m.away_score }}</div>
           </div>

@@ -22,6 +22,17 @@ def get_scoreboard(league: League, week: int) -> List[Dict[str, Any]]:
     """
     matchups = []
     box_scores = _get_cached_box_scores(league, week)
+    
+    # Get team records through the current week for W/L display
+    team_records = {}
+    if week > 0:
+        standings = _compute_standings_through_week(league, week)
+        for team in standings:
+            team_records[team["team_id"]] = {
+                "wins": team["wins"],
+                "losses": team["losses"], 
+                "ties": team["ties"]
+            }
 
     for b in box_scores:
         home_team_obj = getattr(b, "home_team", None)
@@ -67,6 +78,15 @@ def get_scoreboard(league: League, week: int) -> List[Dict[str, Any]]:
                 away_owner = f"{owner.get('firstName', '')} {owner.get('lastName', '')}".strip()
 
         diff = (hs - as_) if isinstance(hs, (int, float)) and isinstance(as_, (int, float)) else 0.0
+        
+        # Get team records for W/L display
+        home_wins = team_records.get(home_id, {}).get("wins", 0) if home_id else 0
+        home_losses = team_records.get(home_id, {}).get("losses", 0) if home_id else 0
+        home_ties = team_records.get(home_id, {}).get("ties", 0) if home_id else 0
+        away_wins = team_records.get(away_id, {}).get("wins", 0) if away_id else 0
+        away_losses = team_records.get(away_id, {}).get("losses", 0) if away_id else 0
+        away_ties = team_records.get(away_id, {}).get("ties", 0) if away_id else 0
+        
         matchups.append({
             "home_id": home_id,
             "away_id": away_id,
@@ -78,6 +98,12 @@ def get_scoreboard(league: League, week: int) -> List[Dict[str, Any]]:
             "away_score": as_,
             "home_owner": home_owner,
             "away_owner": away_owner,
+            "home_wins": home_wins,
+            "home_losses": home_losses,
+            "home_ties": home_ties,
+            "away_wins": away_wins,
+            "away_losses": away_losses,
+            "away_ties": away_ties,
             "margin": abs(diff),
             "winner": home_name if diff > 0 else (away_name if diff < 0 else None),
         })
