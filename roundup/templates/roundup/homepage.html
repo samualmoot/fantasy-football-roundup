@@ -29,6 +29,9 @@
             {% endif %}
           </div>
           <div class="player-name">{{ t.team_name }}</div>
+          {% if t.owner_name %}
+            <div class="player-owner">{{ t.owner_name }}</div>
+          {% endif %}
         </div>
         {% empty %}
         <div class="player-card">

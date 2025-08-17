@@ -77,12 +77,11 @@ body {
  * Row 1: Header with navigation
  * Row 2: Overview section (spans full width)
  * Row 3: Player highlights row (highlights + incentive)
- * Row 4: Main content (left sidebar + scores + right sidebar)
- */
+ * Row 4: Main content (standings + right content) */
 .grid { 
   display: grid; 
-  grid-template-columns: 1fr 2.3fr 1.2fr; /* Left | Center | Right */
-  grid-template-rows: auto auto auto auto;  /* Header | Overview | Highlights | Main - all auto-sized */
+  grid-template-columns: 1.2fr 3fr; /* Standings | Right Content */
+  grid-template-rows: auto auto auto auto auto;  /* Header | Overview | Highlights | Main | Booms & Busts */
   gap: 20px; /* Reduced gap for more compact layout */
   min-height: calc(100vh - 40px);
   max-width: 1400px;
@@ -96,40 +95,39 @@ body {
   grid-row: 2;         /* Second row */
 }
 
-/* Weekly scores in center column, sizes to match booms & busts height */
+/* Weekly scores in right column, row 4 */
 .scores-section { 
-  grid-column: 2;       /* Center column */
+  grid-column: 2;       /* Right column */
   grid-row: 4;          /* Fourth row (main content) */
   height: fit-content;  /* Size to content instead of stretching */
   display: flex;
   flex-direction: column;
-  border: 2px solid blue; /* Temporary debugging border */
 }
 
-/* Left sidebar: Booms & Busts section */
-.bb-aside { 
-  grid-column: 1;       /* First column */
-  grid-row: 4;          /* Fourth row (main content) */
-  height: fit-content;  /* Only take height needed for content */
-  display: flex;
-  flex-direction: column;
-  border: 2px solid red; /* Temporary debugging border */
-}
-
-/* Right sidebar: League standings */
+/* Left sidebar: Standings section - stretches from below overview to bottom */
 .standings-aside { 
-  grid-column: 3;       /* Third column */
-  grid-row: 4;          /* Fourth row (main content) */
-  height: fit-content;  /* Size to content instead of stretching */
+  grid-column: 1;       /* First column */
+  grid-row: 3 / 5;      /* From row 3 (below overview) to row 5 (spans same rows as scores) */
+  height: fit-content;  /* Fit to content height instead of stretching */
   display: flex;
   flex-direction: column;
-  border: 2px solid green; /* Temporary debugging border */
+  justify-content: flex-start; /* Align content to top */
+}
+
+/* Booms & Busts section below scores - full width */
+.bb-section-below { 
+  grid-column: 1 / -1;   /* Span full width (both columns) */
+  grid-row: 5;           /* Fifth row (below main content) */
+  height: fit-content;   /* Only take height needed for content */
+  display: flex;
+  flex-direction: column;
+  margin-top: 20px;      /* Add some spacing from scores above */
 }
 
 /* Row below Overview: Player highlights and weekly incentive side by side */
 .overview-row {
-  grid-column: 1 / -1;  /* Span full width */
-  grid-row: 3;          /* Third row */
+  grid-column: 2;        /* Right column only */
+  grid-row: 3;           /* Third row */
   display: grid;
   grid-template-columns: auto 1fr; /* Highlights sized by content, Incentive takes remaining */
   gap: 24px;
@@ -244,66 +242,92 @@ ul {
   padding-left: 20px; 
 }
 
-/* ===== TABLE STYLES =====
+/* ===== MODERN WEEKLY SCORES DESIGN =====
  * 
- * Base table styling used for scores, standings, and other data displays.
- * Tables have consistent spacing, borders, and hover effects.
- * Special styling for close games and playoff teams.
+ * Beautiful card-based layout with circular team icons, inspired by homepage design.
+ * Each matchup is displayed as a card with team logos, names, and scores.
+ * Hover effects and gradients create an engaging, modern appearance.
  */
-table { 
-  width: 100%; 
-  border-collapse: collapse; 
-}
 
-/* Weekly scores table - shows matchup results */
+/* Weekly scores container - modern card grid */
 .scores { 
-  width: 100%; 
-  table-layout: auto; 
-  font-variant-numeric: tabular-nums; /* Aligns numbers properly */
+  display: grid;
+  gap: 16px;
+  width: 100%;
 }
 
-/* Table cell styling */
-th, td { 
-  padding: 8px 8px; /* More compact padding for tighter layout */
-  border-bottom: 1px solid var(--gray-200); 
-  vertical-align: middle; 
-  font-size: 13px; /* Smaller font for more compact rows */
-  line-height: 1.2; /* Tighter line height for more compact rows */
-}
-
-/* Table header styling */
-th { 
-  text-align: left; 
-  color: var(--gray-600); 
-  font-weight: 600; 
-  font-size: 11px; /* Smaller font for more compact header */
-  text-transform: uppercase; 
-  letter-spacing: .05em;
-  background: var(--gray-50);
-  border-bottom: 2px solid var(--gray-200);
-  padding: 6px 8px; /* More compact header padding */
-}
-
-/* Alternating row colors for readability */
-tbody tr:nth-child(odd) { 
-  background: var(--gray-50); 
-}
-
-tbody tr:nth-child(even) {
+/* Individual matchup card */
+.score-matchup-card {
   background: white;
+  border: 1px solid var(--gray-200);
+  border-radius: 16px;
+  padding: 20px;
+  box-shadow: var(--shadow-sm);
+  transition: all 0.3s ease;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  position: relative;
+  min-height: 120px; /* Ensure cards have proper height */
 }
 
-/* Row hover effects */
-tbody tr:hover {
-  background: var(--primary-light);
-  transform: scale(1.01);
-  transition: all 0.2s ease;
+/* Hover effect for matchup cards */
+.score-matchup-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-lg);
+  border-color: var(--gray-300);
 }
 
-/* Special styling for close games (highlighted in yellow) */
-tbody tr.close { 
-  background: #fef3c7; 
-  border-left: 4px solid var(--warning);
+/* VS separator styling - REMOVED OLD CONFLICTING RULES */
+
+/* ===== TEAM SCORE STYLING =====
+ * 
+ * Individual team display within each matchup card.
+ * Teams are displayed with circular logos, names, and scores.
+ * Winning teams get special styling and enhanced hover effects.
+ * Close games get special highlighting.
+ */
+
+/* Team score container - REMOVED OLD CONFLICTING RULES */
+
+/* Team logo - REMOVED OLD CONFLICTING RULES */
+
+/* Team name */
+.team-name {
+  font-weight: 700;
+  font-size: 18px;
+  color: var(--gray-800);
+  margin-bottom: 6px;
+  line-height: 1.2;
+}
+
+/* Team owner name */
+.team-owner {
+  font-size: 14px;
+  color: var(--gray-600);
+  margin-bottom: 10px;
+  line-height: 1.2;
+  font-style: italic;
+  font-weight: 500;
+}
+
+/* Team W-L record - REMOVED OLD CONFLICTING RULES */
+
+/* Team score - REMOVED OLD CONFLICTING RULES */
+
+/* Close game styling - special highlight for nail-biters */
+.score-matchup-card.close {
+  border-color: var(--warning);
+  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.15);
+}
+
+.score-matchup-card.close:hover {
+  box-shadow: 0 6px 16px rgba(245, 158, 11, 0.2);
+}
+
+.score-matchup-card.close .score-team {
+  background: rgba(255, 255, 255, 0.8);
 }
 
 /* ===== STANDINGS TABLE STYLES =====
@@ -810,34 +834,143 @@ tbody tr.close {
   text-align: center;
 }
 
-/* ===== DESKTOP SCORES - CARD LAYOUT =====
+/* ===== DESKTOP SCORES - STANDINGS-STYLE LAYOUT =====
  * 
- * Grid layout for weekly matchup cards on desktop.
- * Each card shows home team | VS | away team with scores.
+ * Clean card layout matching the standings design.
+ * Each card shows: Team Logo + Info | VS | Team Logo + Info | Scores
  */
 .desktop-scores {
   display: grid;
-  gap: 16px;
+  gap: 12px;
 }
 
-/* Individual matchup card */
+/* Individual matchup card - horizontal flow */
 .score-matchup-card {
-  display: grid;
-  grid-template-columns: 1fr auto 1fr; /* Home Team | VS | Away Team */
-  gap: 16px;
+  display: flex;
   align-items: center;
-  padding: 20px;
+  padding: 16px;
   background: white;
   border: 1px solid var(--gray-200);
   border-radius: 12px;
   box-shadow: var(--shadow-sm);
   transition: all 0.2s ease;
+  gap: 12px;
+  overflow: hidden;
+  min-width: 0;
 }
 
 /* Hover effect for matchup cards */
 .score-matchup-card:hover {
   transform: translateY(-2px);
   box-shadow: var(--shadow-md);
+}
+
+/* Team info section (logo + details) - REMOVED, now direct layout */
+
+/* Team logo in scores */
+.score-team-logo {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--primary-light), #e0f2fe);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid white;
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.score-team-logo img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+/* Team containers (logo + details) */
+.score-team-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+  min-width: 280px; /* Increased width for better visibility */
+  position: absolute;
+  left: 20px;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.score-team-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+  min-width: 280px; /* Increased width for better visibility */
+  position: absolute;
+  right: 20px;
+  top: 50%;
+  transform: translateY(-50%);
+  justify-content: flex-end; /* Push content to the right edge */
+}
+
+/* Team details (name + owner) */
+.score-team-details {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  max-width: 240px; /* Increased width for longer team names */
+  flex-shrink: 0; /* Prevent shrinking */
+}
+
+/* Scores and VS container - centered in card */
+.score-scores-container {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  flex-shrink: 0;
+}
+
+/* VS separator */
+.score-vs {
+  font-weight: 700;
+  font-size: 14px;
+  color: var(--gray-500);
+  padding: 6px 12px;
+  background: var(--gray-100);
+  border-radius: 6px;
+  text-align: center;
+  width: 60px; /* Fixed width for perfect alignment */
+  flex-shrink: 0; /* Prevent shrinking */
+}
+
+/* Score results section - REMOVED, now direct layout */
+
+/* Individual scores */
+.score-home, .score-away {
+  font-size: 24px;
+  font-weight: 800;
+  color: var(--gray-700);
+  line-height: 1;
+  padding: 8px 12px;
+  border-radius: 8px;
+  background: var(--gray-50);
+  width: 80px; /* Fixed width for perfect alignment */
+  text-align: center;
+  flex-shrink: 0; /* Prevent shrinking */
+}
+
+/* Winner score styling */
+.score-home.winner, .score-away.winner {
+  background: var(--success);
+  color: white;
+  box-shadow: var(--shadow-sm);
 }
 
 /* ===== TEAM SCORE STYLING =====
@@ -1022,16 +1155,7 @@ tbody tr.close {
     padding: 16px;
   }
   
-  /* Stack matchup teams vertically on medium screens */
-  .score-matchup-card {
-    grid-template-columns: 1fr; /* Single column layout */
-    gap: 12px;
-  }
-  
-  /* Center team information */
-  .score-team {
-    justify-content: center;
-  }
+  /* Stack matchup teams vertically on medium screens - REMOVED CONFLICTING RULES */
 }
 
 /* ===== BOOMS & BUSTS SECTION =====
@@ -1046,13 +1170,27 @@ tbody tr.close {
   height: fit-content; /* Only take height needed for content */
 }
 
+/* Horizontal 3x3 grid layout for booms & busts positions */
+.bb-positions-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr); /* 3 columns for 6 positions (2 rows) */
+  grid-template-rows: auto auto; /* 2 rows */
+  gap: 8px; /* Further reduced gap for tighter layout */
+  margin-top: 16px;
+  width: 100%; /* Ensure grid fits within parent */
+  max-width: 100%; /* Prevent overflow */
+  box-sizing: border-box; /* Include padding/borders in width calculation */
+}
+
 /* Individual position card (e.g., "Quarterbacks") */
 .bb-position-card {
   background: white;
   border: 1px solid var(--gray-200);
-  border-radius: 8px;
-  padding: 8px; /* Reduced padding for more compact layout */
+  border-radius: 6px; /* Slightly smaller border radius */
+  padding: 6px; /* Reduced padding for more compact layout */
   box-shadow: var(--shadow-sm);
+  min-width: 0; /* Allow cards to shrink */
+  overflow: hidden; /* Prevent content overflow */
 }
 
 /* ===== BOOMS & BUSTS SECTION HEADERS =====
@@ -1089,7 +1227,7 @@ tbody tr.close {
 .bb-sections-container {
   display: grid;
   grid-template-columns: 1fr 1fr; /* Booms | Busts */
-  gap: 12px;
+  gap: 8px; /* Reduced gap between booms and busts */
 }
 
 /* Section header styling - removed for ultra-compact design */
@@ -1345,6 +1483,17 @@ tbody tr.close {
   font-size: 14px;
   color: var(--gray-800);
   line-height: 1.3;
+  margin-bottom: 2px;
+}
+
+/* Team owner in standings */
+.standing-team-info .team-owner {
+  font-size: 12px;
+  color: var(--gray-600);
+  line-height: 1.2;
+  font-style: italic;
+  font-weight: 500;
+  margin-bottom: 4px;
 }
 
 /* Movement indicator showing rank change */
@@ -1410,31 +1559,7 @@ tbody tr.close {
  * Each matchup shows teams in a 3-column grid layout.
  */
 
-/* Grid layout for alternative score cards */
-.desktop-scores {
-  display: grid;
-  gap: 16px;
-}
-
-/* Alternative matchup card styling */
-.score-matchup-card {
-  background: var(--gray-50);
-  border: 1px solid var(--gray-200);
-  border-radius: 16px;
-  padding: 20px;
-  display: grid;
-  grid-template-columns: 1fr auto 1fr; /* Home Team | VS | Away Team */
-  gap: 12px;
-  align-items: center;
-  transition: all 0.2s ease;
-}
-
-/* Hover effect for alternative score cards */
-.score-matchup-card:hover {
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-md);
-  border-color: var(--gray-300);
-}
+/* Grid layout for alternative score cards - REMOVED CONFLICTING RULES */
 
 /* ===== ALTERNATIVE TEAM SCORE STYLING =====
  * 
@@ -1994,63 +2119,124 @@ tbody tr:hover {
   box-shadow: var(--shadow-sm);
 }
 
-/* ===== MISSING STYLES FOR MOBILE LAYOUTS ===== */
+/* ===== MOBILE SCORE CARD STYLES ===== */
+
+/* Mobile scores - simplified vertical layout */
 .mobile-score-card {
-  background: var(--gray-50);
+  background: white;
   border: 1px solid var(--gray-200);
-  border-radius: 12px;
+  border-radius: 16px;
+  margin-bottom: 16px;
   padding: 16px;
-  margin-bottom: 12px;
-  text-align: center;
+  box-shadow: var(--shadow-sm);
 }
 
-.mobile-score-teams {
+/* Mobile team layout - simplified vertical stack */
+.mobile-score-team {
+  position: relative;
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  margin-bottom: 12px;
+  gap: 8px;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--gray-100);
 }
 
-.mobile-team {
+.mobile-score-team:last-child {
+  border-bottom: none;
+}
+
+/* Home team score - positioned on the right */
+.mobile-score-team:first-child .mobile-score-home {
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+/* Away team score - positioned on the right, same horizontal position */
+.mobile-score-team:last-child .mobile-score-away {
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+
+
+/* Mobile team name styling */
+.mobile-team-name {
+  font-weight: 600;
+  font-size: 16px;
+  margin-bottom: 2px;
+  line-height: 1.2;
+}
+
+.mobile-team-owner {
+  font-size: 13px;
+  color: var(--gray-600);
+  margin-bottom: 2px;
+  line-height: 1.2;
+  font-style: italic;
+  font-weight: 500;
+}
+
+.mobile-score-team-logo {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--primary-light), #e0f2fe);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid white;
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.mobile-score-team-logo img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.mobile-score-team-details {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
   flex: 1;
+}
+
+.mobile-score-vs {
+  text-align: center;
+  padding: 8px 0;
+  font-weight: 600;
+  color: var(--gray-500);
+  font-size: 12px;
+  border-top: 1px solid var(--gray-200);
+  border-bottom: 1px solid var(--gray-200);
+  margin: 8px 0;
+}
+
+/* Mobile score results - REMOVED, now direct layout */
+
+.mobile-score-home, .mobile-score-away {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--gray-700);
+  line-height: 1;
+  padding: 4px 8px;
+  border-radius: 6px;
+  background: var(--gray-50);
+  min-width: 60px;
   text-align: center;
 }
 
-.mobile-team-name {
-  font-weight: 600;
-  font-size: 14px;
-  margin-bottom: 4px;
-}
-
-.mobile-team-logo { 
-  width: 24px; 
-  height: 24px; 
-  border-radius: 6px; 
-  object-fit: cover; 
-  display: block; 
-  margin: 0 auto 4px; 
-}
-
-.mobile-team-record {
-  font-size: 12px;
-  color: var(--gray-500);
-}
-
-.mobile-score {
-  font-size: 24px;
-  font-weight: 700;
-  color: var(--success);
-}
-
-.mobile-score.loser {
-  color: var(--gray-600);
-}
-
-.mobile-vs {
-  font-size: 12px;
-  color: var(--gray-500);
-  margin: 0 12px;
-  font-weight: 600;
+.mobile-score-home.winner, .mobile-score-away.winner {
+  background: var(--success);
+  color: white;
+  box-shadow: var(--shadow-sm);
 }
 
 .mobile-standing-item {
@@ -2085,6 +2271,15 @@ tbody tr:hover {
 .mobile-standing-team {
   flex: 1;
   font-weight: 600;
+}
+
+.mobile-standing-team .mobile-team-owner {
+  font-size: 11px;
+  color: var(--gray-600);
+  line-height: 1.2;
+  font-style: italic;
+  font-weight: 500;
+  margin-top: 2px;
 }
 
 .mobile-standing-stats {
@@ -2277,24 +2472,172 @@ tbody tr:hover {
     display: none !important;
   }
   
+  /* Mobile: Show booms & busts section below scores */
+  .bb-section-below {
+    margin-top: 16px;
+  }
+  
+  /* Mobile: Booms & busts positions stack vertically */
+  .bb-positions-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+  
   /* Mobile scores - simplified card layout for small screens */
   .mobile-scores {
     display: block;
+    margin-top: 16px;
+  }
+  
+  /* Mobile score card improvements */
+  .mobile-score-card {
+    margin-bottom: 16px;
+  }
+  
+  .mobile-score-team-logo {
+    width: 48px;
+    height: 48px;
+  }
+  
+  .mobile-score-team-details {
+    max-width: 140px;
+  }
+  
+  .mobile-score-home, .mobile-score-away {
+    min-width: 70px;
+    max-width: 90px;
+    font-size: 22px;
+    font-weight: 800;
+  }
+  
+  /* Mobile standings - ensure visibility */
+  .mobile-standings {
+    display: block !important;
+    margin-top: 20px;
+  }
+  
+  /* Force mobile standings to show and hide desktop standings */
+  .standings-aside {
+    display: none !important;
+  }
+  
+  /* Override the default hidden state for mobile components */
+  .mobile-scores {
+    display: block !important;
+  }
+  
+  .mobile-standings {
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+  }
+  
+  .mobile-bb {
+    display: none !important; /* Keep old mobile bb hidden */
+  }
+  
+  .mobile-bb-bottom {
+    display: block !important;
+  }
+  
+  /* Force override of the default hidden state */
+  .mobile-scores, .mobile-standings, .mobile-bb-bottom {
+    display: block !important;
   }
   
   /* Mobile standings - compact list layout */
   .mobile-standings {
-    display: block;
+    display: block !important;
+    margin-top: 16px;
+    visibility: visible !important;
+    opacity: 1 !important;
+  }
+  
+  /* Mobile standings items */
+  .mobile-standing-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px;
+    border-bottom: 1px solid var(--gray-200);
+    background: white;
+    margin-bottom: 8px;
+    border-radius: 8px;
+    box-shadow: var(--shadow-sm);
+  }
+  
+  .mobile-standing-item:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+  }
+  
+  .mobile-standing-item.playoff {
+    background: #ecfdf5;
+  }
+  
+  .mobile-standing-item.cutoff {
+    border-bottom: 3px solid var(--success);
+    font-weight: 600;
+  }
+  
+  .mobile-standing-rank {
+    font-weight: 700;
+    color: var(--primary);
+    margin-right: 12px;
+    min-width: 24px;
+  }
+  
+  .mobile-standing-team {
+    flex: 1;
+    font-weight: 600;
+  }
+  
+  .mobile-standing-team .mobile-team-owner {
+    font-size: 11px;
+    color: var(--gray-600);
+    line-height: 1.2;
+    font-style: italic;
+    font-weight: 500;
+    margin-top: 2px;
+  }
+  
+  .mobile-standing-stats {
+    text-align: right;
+    font-size: 12px;
+  }
+  
+  .mobile-standing-record {
+    font-weight: 600;
+    margin-bottom: 2px;
+  }
+  
+  .mobile-standing-pf {
+    color: var(--gray-600);
   }
   
   /* Mobile booms/busts - simplified card layout */
   .mobile-bb {
-    display: block;
+    display: none; /* Hide old mobile bb */
   }
   
   /* Show mobile booms & busts at bottom of page (below standings) */
   .mobile-bb-bottom {
     display: block;
+  }
+  
+  /* Hide desktop booms & busts on mobile */
+  .bb-section-below {
+    display: none !important;
+  }
+  
+  /* Hide desktop scores on mobile */
+  .desktop-scores {
+    display: none !important;
+  }
+  
+  /* Hide desktop standings on mobile */
+  .standings-aside {
+    display: none !important;
   }
   
   /* Mobile awards */

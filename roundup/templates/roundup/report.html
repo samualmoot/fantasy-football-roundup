@@ -38,23 +38,61 @@
       </p>
     </section>
 
-    <!-- Player Highlights and Weekly Incentive directly below Overview -->
+    <!-- Left: Standings (stretches from below overview to bottom) -->
+    <aside class="card standings-card standings-aside">
+      <h2>Standings</h2>
+      
+      <!-- Desktop Standings - Card Layout -->
+      <div class="desktop-standings">
+        {% for t in standings %}
+        <div class="standing-team-card {% if t.rank <= playoff_team_count %}playoff{% endif %} {% if t.rank == playoff_team_count %}cutoff{% endif %}">
+          <div class="standing-rank">
+            <div class="rank-number">#{{ t.rank }}</div>
+            {% if t.rank <= playoff_team_count %}
+              <div class="playoff-badge">🏆</div>
+            {% endif %}
+          </div>
+          
+          <div class="standing-team-info">
+            <div class="team-name">{{ t.team_name }}</div>
+            {% if t.owner_name %}<div class="team-owner">{{ t.owner_name }}</div>{% endif %}
+            {% if t.movement_abs %}
+              <div class="movement-indicator {% if t.movement_is_up %}up{% else %}down{% endif %}">
+                {% if t.movement_is_up %}▲{% else %}▼{% endif %} {{ t.movement_abs }}
+              </div>
+            {% endif %}
+          </div>
+          
+          <div class="standing-stats">
+            <div class="record-badge">{{ t.wins }}-{{ t.losses }}-{{ t.ties }}</div>
+            <div class="points-display">{{ t.points_for }}</div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+      
+      <div class="muted-with-margin">Top {{ playoff_team_count }} highlighted as current playoff positions.</div>
+    </aside>
+
+
+
+    <!-- Right: Player Highlights and Weekly Incentive (top row) -->
     <div class="overview-row">
       <section class="card highlights-card">
         <h2>⭐ Player Highlights</h2>
-          <ul class="awards">
-            {% for a in awards %}
-              <li class="award">
+        <ul class="awards">
+          {% for a in awards %}
+            <li class="award">
               <span class="award-icon">⭐</span>
-                <div class="award-body">
-                  <div class="award-title">{{ a.title }}</div>
-                  <div class="award-text">{{ a.text }}</div>
-                </div>
-              </li>
-            {% empty %}
+              <div class="award-body">
+                <div class="award-title">{{ a.title }}</div>
+                <div class="award-text">{{ a.text }}</div>
+              </div>
+            </li>
+          {% empty %}
             <li class="muted">No highlights available.</li>
-            {% endfor %}
-          </ul>
+          {% endfor %}
+        </ul>
       </section>
   
       <section class="card incentive-card">
@@ -63,7 +101,7 @@
           <div class="incentive-section">
             <div class="incentive-label">This Week's Challenge</div>
             <div class="incentive-title">{{ weekly_incentive.this_title }}</div>
-        </div>
+          </div>
           
           <div class="incentive-section">
             <div class="incentive-label">🏅 Winner</div>
@@ -84,125 +122,116 @@
       </section>
     </div>
 
-    <!-- Center: Weekly Scores (fills remaining height) -->
+    <!-- Right: Weekly Scores (middle row) -->
     <section class="card scores-card scores-section" id="scores-card">
       <h2>Weekly Scores</h2>
       
-      <!-- Desktop Scores - Card Layout -->
+      <!-- Desktop Scores - Card Layout (Horizontal Flow) -->
       <div class="desktop-scores">
         {% for m in scoreboard %}
         <div class="score-matchup-card">
-          <div class="score-team home-team {% if m.winner == m.home_team %}winner{% endif %}">
-            <div class="team-info">
-              <div class="team-name team-name-row">
-                {% if m.home_id and m.home_logo %}
-                  <img class="team-logo" src="{% url 'team_logo' team_id=m.home_id %}" alt="{{ m.home_team }} logo" />
-                {% endif %}
-                <span>{{ m.home_team }}</span>
-              </div>
-              {% if m.home_record %}<div class="team-record">{{ m.home_record }}</div>{% endif %}
-            </div>
-            <div class="team-score {% if m.winner == m.home_team %}winner-score{% endif %}">
-              {{ m.home_score }}
-            </div>
-          </div>
-          
-          <div class="score-vs">
-            <div class="vs-text">vs</div>
-            {% if m.winner %}
-              <div class="winner-indicator">🏆</div>
+          <!-- Home Team Logo + Info -->
+          <div class="score-team-left">
+            {% if m.home_id and m.home_logo %}
+              <img class="score-team-logo" src="{% url 'team_logo' team_id=m.home_id %}" alt="{{ m.home_team }} logo" />
             {% endif %}
+            <div class="score-team-details">
+              <div class="team-name">{{ m.home_team }}</div>
+              {% if m.home_owner %}<div class="team-owner">{{ m.home_owner }}</div>{% endif %}
+              <div class="team-record">{{ m.home_wins }}-{{ m.home_losses }}-{{ m.home_ties }}</div>
+            </div>
           </div>
           
-          <div class="score-team away-team {% if m.winner == m.away_team %}winner{% endif %}">
-            <div class="team-info">
-              <div class="team-name team-name-row">
-                {% if m.away_id and m.away_logo %}
-                  <img class="team-logo" src="{% url 'team_logo' team_id=m.away_id %}" alt="{{ m.away_team }} logo" />
-                {% endif %}
-                <span>{{ m.away_team }}</span>
-              </div>
-              {% if m.away_record %}<div class="team-record">{{ m.away_record }}</div>{% endif %}
+          <!-- Scores and VS Container (Centered) -->
+          <div class="score-scores-container">
+            <!-- Home Team Score -->
+            <div class="score-home">{{ m.home_score }}</div>
+            
+            <!-- VS Separator -->
+            <div class="score-vs">vs</div>
+            
+            <!-- Away Team Score -->
+            <div class="score-away">{{ m.away_score }}</div>
+          </div>
+          
+          <!-- Away Team Logo + Info -->
+          <div class="score-team-right">
+            <div class="score-team-details">
+              <div class="team-name">{{ m.away_team }}</div>
+              {% if m.away_owner %}<div class="team-owner">{{ m.away_owner }}</div>{% endif %}
+              <div class="team-record">{{ m.away_wins }}-{{ m.away_losses }}-{{ m.away_ties }}</div>
             </div>
-            <div class="team-score {% if m.winner == m.away_team %}winner-score{% endif %}">
-              {{ m.away_score }}
-            </div>
+            {% if m.away_id and m.away_logo %}
+              <img class="score-team-logo" src="{% url 'team_logo' team_id=m.away_id %}" alt="{{ m.away_team }} logo" />
+            {% endif %}
           </div>
         </div>
         {% endfor %}
       </div>
       
-      <!-- Legacy table for fallback -->
-      <table class="scores hidden" id="scores-table">
-        <tbody>
-          {% for m in scoreboard %}
-          <tr>
-            <td class="name-col">
-              <div class="team-cell-home">
-                <span>{{ m.home_team }}{% if m.home_record %} <span class="muted">({{ m.home_record }})</span>{% endif %}</span>
-              </div>
-            </td>
-            <td class="score-col">
-              {% if m.winner == m.home_team %}
-                <strong>{{ m.home_score }}</strong>
-              {% else %}
-                <span>{{ m.home_score }}</span>
-              {% endif %}
-            </td>
-            <td class="vs-col">vs</td>
-            <td class="score-col">
-              {% if m.winner == m.away_team %}
-                <strong>{{ m.away_score }}</strong>
-              {% else %}
-                <span>{{ m.away_score }}</span>
-              {% endif %}
-            </td>
-            <td class="name-col">
-              <div class="team-cell-away">
-                <span>{{ m.away_team }}{% if m.away_record %}<span class="muted">({{ m.away_record }})</span>{% endif %}</span>
-              </div>
-            </td>
-          </tr>
-          {% endfor %}
-        </tbody>
-      </table>
-      
-      <!-- Mobile Scores Layout -->
+      <!-- Mobile Scores - Simplified Layout -->
       <div class="mobile-scores">
         {% for m in scoreboard %}
         <div class="mobile-score-card">
-          <div class="mobile-score-teams">
-            <div class="mobile-team">
-              {% if m.home_id and m.home_logo %}
-                <img class="mobile-team-logo" src="{% url 'team_logo' team_id=m.home_id %}" alt="{{ m.home_team }} logo" />
-              {% endif %}
+          <!-- Home Team -->
+          <div class="mobile-score-team">
+            {% if m.home_id and m.home_logo %}
+              <img class="mobile-score-team-logo" src="{% url 'team_logo' team_id=m.home_id %}" alt="{{ m.home_team }} logo" />
+            {% endif %}
+            <div class="mobile-score-team-details">
               <div class="mobile-team-name">{{ m.home_team }}</div>
-              {% if m.home_record %}<div class="mobile-team-record">{{ m.home_record }}</div>{% endif %}
-              <div class="mobile-score {% if m.winner != m.home_team %}loser{% endif %}">
-                {% if m.winner == m.home_team %}<strong>{{ m.home_score }}</strong>{% else %}{{ m.home_score }}{% endif %}
-              </div>
+              {% if m.home_owner %}<div class="mobile-team-owner">{{ m.home_owner }}</div>{% endif %}
             </div>
-            <div class="mobile-vs">vs</div>
-            <div class="mobile-team">
-              {% if m.away_id and m.away_logo %}
-                <img class="mobile-team-logo" src="{% url 'team_logo' team_id=m.away_id %}" alt="{{ m.away_team }} logo" />
-              {% endif %}
+            <div class="mobile-score-home">{{ m.home_score }}</div>
+          </div>
+          
+          <!-- VS -->
+          <div class="mobile-score-vs">vs</div>
+          
+          <!-- Away Team -->
+          <div class="mobile-score-team">
+            {% if m.away_id and m.away_logo %}
+              <img class="mobile-score-team-logo" src="{% url 'team_logo' team_id=m.away_id %}" alt="{{ m.away_team }} logo" />
+            {% endif %}
+            <div class="mobile-score-team-details">
               <div class="mobile-team-name">{{ m.away_team }}</div>
-              {% if m.away_record %}<div class="mobile-team-record">{{ m.away_record }}</div>{% endif %}
-              <div class="mobile-score {% if m.winner != m.away_team %}loser{% endif %}">
-                {% if m.winner == m.away_team %}<strong>{{ m.away_score }}</strong>{% else %}{{ m.away_score }}{% endif %}
-              </div>
+              {% if m.away_owner %}<div class="mobile-team-owner">{{ m.away_owner }}</div>{% endif %}
             </div>
+            <div class="mobile-score-away">{{ m.away_score }}</div>
           </div>
         </div>
         {% endfor %}
       </div>
     </section>
 
-    <!-- Left: Booms/Busts only -->
-    <aside class="card bb-card bb-aside">
+    <!-- Mobile Standings Layout - Positioned below weekly scores -->
+    <div class="mobile-standings">
+      {% for t in standings %}
+      <div class="mobile-standing-item {% if t.rank <= playoff_team_count %}playoff{% endif %} {% if t.rank == playoff_team_count %}cutoff{% endif %}">
+        <div class="mobile-standing-rank">#{{ t.rank }}</div>
+        <div class="mobile-standing-team">
+          <div class="mobile-team-name">{{ t.team_name }}</div>
+          {% if t.owner_name %}<div class="mobile-team-owner">{{ t.owner_name }}</div>{% endif %}
+          {% if t.movement_abs %}
+            {% if t.movement_is_up %}
+              <span class="move up">▲ {{ t.movement_abs }}</span>
+            {% else %}
+              <span class="move down">▼ {{ t.movement_abs }}</span>
+            {% endif %}
+          {% endif %}
+        </div>
+        <div class="mobile-standing-stats">
+          <div class="mobile-standing-record">{{ t.wins }}-{{ t.losses }}-{{ t.ties }}</div>
+          <div class="mobile-standing-pf">{{ t.points_for }}</div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+
+    <!-- Right: Booms & Busts (bottom row) -->
+    <section class="card bb-card bb-section-below">
       <h2>Booms &amp; Busts</h2>
-      <div class="bb-grid">
+      <div class="bb-positions-grid">
         {% for row in incentives.boom_bust_by_position %}
         <div class="bb-position-card">
           <div class="bb-position-header">{{ row.position }}</div>
@@ -266,276 +295,98 @@
         {% endfor %}
       </div>
       
-      <!-- Mobile Booms/Busts Layout -->
-      <div class="mobile-bb">
-        {% for row in incentives.boom_bust_by_position %}
-        <div class="mobile-bb-position">
-          <div class="mobile-bb-position-title">{{ row.position }}</div>
-          <div class="mobile-bb-sections-container">
-            <!-- Mobile Booms -->
-            <div class="mobile-bb-section">
-              <div class="mobile-bb-section-title">Top 3 Booms</div>
-              <div class="mobile-bb-players-list">
-                {% for player in row.booms %}
-                <div class="mobile-bb-player-item boom">
-                  <img class="mobile-bb-player-nfl-logo" src="{{ player.nfl_logo }}" alt="{{ player.nfl_team }} logo" />
-                  <div class="mobile-bb-player-info">
-                    <div class="mobile-bb-player-name">{{ player.player_name }}</div>
-                    <div class="mobile-bb-player-team">{{ player.fantasy_team }}</div>
-                  </div>
-                  <div class="mobile-bb-player-points">{{ player.points }} pts</div>
-                </div>
-                {% empty %}
-                <div class="mobile-bb-player-item boom no-data">
-                  <div class="mobile-bb-player-info">
-                    <div class="mobile-bb-player-name muted">No data</div>
-                  </div>
-                </div>
-                {% endfor %}
-              </div>
-            </div>
-            
-            <!-- Mobile Busts -->
-            <div class="mobile-bb-section">
-              <div class="mobile-bb-section-title">Top 3 Busts</div>
-              <div class="mobile-bb-players-list">
-                {% for player in row.busts %}
-                <div class="mobile-bb-player-item bust">
-                  <img class="mobile-bb-player-nfl-logo" src="{{ player.nfl_logo }}" alt="{{ player.nfl_team }} logo" />
-                  <div class="mobile-bb-player-info">
-                    <div class="mobile-bb-player-name">{{ player.player_name }}</div>
-                    <div class="mobile-bb-player-team">{{ player.fantasy_team }}</div>
-                  </div>
-                  <div class="mobile-bb-player-points">{{ player.points }} pts</div>
-                </div>
-                {% empty %}
-                <div class="mobile-bb-player-item bust no-data">
-                  <div class="mobile-bb-player-info">
-                    <div class="mobile-bb-player-name muted">No data</div>
-                  </div>
-                </div>
-                {% endfor %}
-              </div>
-            </div>
-          </div>
-        </div>
-        {% endfor %}
-      </div>
-    </aside>
 
-    <!-- Right: Standings only -->
-    <aside class="card standings-card standings-aside">
-      <h2>Standings</h2>
-      
-      <!-- Desktop Standings - Card Layout -->
-      <div class="desktop-standings">
-        {% for t in standings %}
-        <div class="standing-team-card {% if t.rank <= playoff_team_count %}playoff{% endif %} {% if t.rank == playoff_team_count %}cutoff{% endif %}">
-          <div class="standing-rank">
-            <div class="rank-number">#{{ t.rank }}</div>
-            {% if t.rank <= playoff_team_count %}
-              <div class="playoff-badge">🏆</div>
-            {% endif %}
-          </div>
-          
-          <div class="standing-team-info">
-            <div class="team-name">{{ t.team_name }}</div>
-            {% if t.movement_abs %}
-              <div class="movement-indicator {% if t.movement_is_up %}up{% else %}down{% endif %}">
-                {% if t.movement_is_up %}▲{% else %}▼{% endif %} {{ t.movement_abs }}
+    </section>
+  </div>
+
+  <!-- Mobile Booms/Busts Layout - Positioned at bottom of page -->
+  <div class="mobile-bb-bottom">
+    {% for row in incentives.boom_bust_by_position %}
+    <div class="mobile-bb-position">
+      <div class="mobile-bb-position-title">{{ row.position }}</div>
+      <div class="mobile-bb-sections-container">
+        <!-- Mobile Booms -->
+        <div class="mobile-bb-section">
+          <div class="mobile-bb-section-title">Top 3 Booms</div>
+          <div class="mobile-bb-players-list">
+            {% for player in row.booms %}
+            <div class="mobile-bb-player-item boom">
+              <img class="mobile-bb-player-nfl-logo" src="{{ player.nfl_logo }}" alt="{{ player.nfl_team }} logo" />
+              <div class="mobile-bb-player-info">
+                <div class="mobile-bb-player-name">{{ player.player_name }}</div>
+                <div class="mobile-bb-player-team">{{ player.fantasy_team }}</div>
               </div>
-            {% endif %}
-          </div>
-          
-          <div class="standing-stats">
-            <div class="record-badge">{{ t.wins }}-{{ t.losses }}-{{ t.ties }}</div>
-            <div class="points-display">{{ t.points_for }}</div>
-          </div>
-        </div>
-        {% endfor %}
-      </div>
-      
-      <!-- Legacy table for fallback -->
-      <table class="standings hidden">
-        <thead>
-          <tr><th>Team</th><th>W-L-T</th><th>PF</th></tr>
-        </thead>
-        <tbody>
-          {% for t in standings %}
-          <tr class="{% if t.rank <= playoff_team_count %}playoff {% endif %}{% if t.rank == playoff_team_count %}cutoff{% endif %}">
-            <td>
-              <span>{{ t.team_name }}</span>
-              {% if t.movement_abs %}
-                {% if t.movement_is_up %}
-                  <span class="move up">▲ {{ t.movement_abs }}</span>
-                {% else %}
-                  <span class="move down">▼ {{ t.movement_abs }}</span>
-                {% endif %}
-                  {% endif %}
-                </td>
-            <td>{{ t.wins }}-{{ t.losses }}-{{ t.ties }}</td>
-            <td>{{ t.points_for }}</td>
-            </tr>
-            {% endfor %}
-          </tbody>
-        </table>
-      
-      <!-- Mobile Standings Layout -->
-      <div class="mobile-standings">
-        {% for t in standings %}
-        <div class="mobile-standing-item {% if t.rank <= playoff_team_count %}playoff{% endif %} {% if t.rank == playoff_team_count %}cutoff{% endif %}">
-          <div class="mobile-standing-rank">#{{ t.rank }}</div>
-          <div class="mobile-standing-team">
-            {{ t.team_name }}
-            {% if t.movement_abs %}
-              {% if t.movement_is_up %}
-                <span class="move up">▲ {{ t.movement_abs }}</span>
-              {% else %}
-                <span class="move down">▼ {{ t.movement_abs }}</span>
-              {% endif %}
-            {% endif %}
-          </div>
-          <div class="mobile-standing-stats">
-            <div class="mobile-standing-record">{{ t.wins }}-{{ t.losses }}-{{ t.ties }}</div>
-            <div class="mobile-standing-pf">{{ t.points_for }}</div>
-          </div>
-        </div>
-        {% endfor %}
-      </div>
-      <div class="muted-with-margin">Top {{ playoff_team_count }} highlighted as current playoff positions.</div>
-    </aside>
-    
-    <!-- Mobile Booms & Busts - Moved to bottom for mobile layout -->
-    <div class="mobile-bb-bottom">
-      <div class="card bb-card">
-        <h2>Booms &amp; Busts</h2>
-        <div class="mobile-bb">
-          {% for row in incentives.boom_bust_by_position %}
-          <div class="mobile-bb-position">
-            <div class="mobile-bb-position-title">{{ row.position }}</div>
-            <div class="mobile-bb-sections-container">
-              <!-- Mobile Booms -->
-              <div class="mobile-bb-section">
-                <div class="mobile-bb-section-title">Top 3 Booms</div>
-                <div class="mobile-bb-players-list">
-                  {% for player in row.booms %}
-                  <div class="mobile-bb-player-item boom">
-                    <img class="mobile-bb-player-nfl-logo" src="{{ player.nfl_logo }}" alt="{{ player.nfl_team }} logo" />
-                    <div class="mobile-bb-player-info">
-                      <div class="mobile-bb-player-name">{{ player.player_name }}</div>
-                      <div class="mobile-bb-player-team">{{ player.fantasy_team }}</div>
-                    </div>
-                    <div class="mobile-bb-player-points">{{ player.points }} pts</div>
-                  </div>
-                  {% empty %}
-                  <div class="mobile-bb-player-item boom no-data">
-                    <div class="mobile-bb-player-info">
-                      <div class="mobile-bb-player-name muted">No data</div>
-                    </div>
-                  </div>
-                  {% endfor %}
-                </div>
-              </div>
-              
-              <!-- Mobile Busts -->
-              <div class="mobile-bb-section">
-                <div class="mobile-bb-section-title">Top 3 Busts</div>
-                <div class="mobile-bb-players-list">
-                  {% for player in row.busts %}
-                  <div class="mobile-bb-player-item bust">
-                    <img class="mobile-bb-player-nfl-logo" src="{{ player.nfl_logo }}" alt="{{ player.nfl_team }} logo" />
-                    <div class="mobile-bb-player-info">
-                      <div class="mobile-bb-player-name">{{ player.player_name }}</div>
-                      <div class="mobile-bb-player-team">{{ player.fantasy_team }}</div>
-                    </div>
-                    <div class="mobile-bb-player-points">{{ player.points }} pts</div>
-                  </div>
-                  {% empty %}
-                  <div class="mobile-bb-player-item bust no-data">
-                    <div class="mobile-bb-player-info">
-                      <div class="mobile-bb-player-name muted">No data</div>
-                    </div>
-                  </div>
-                  {% endfor %}
-                </div>
+              <div class="mobile-bb-player-points">{{ player.points }} pts</div>
+            </div>
+            {% empty %}
+            <div class="mobile-bb-player-item boom no-data">
+              <div class="bb-player-info">
+                <div class="bb-player-name muted">No data</div>
               </div>
             </div>
+            {% endfor %}
           </div>
-          {% endfor %}
+        </div>
+        
+        <!-- Mobile Busts -->
+        <div class="mobile-bb-section">
+          <div class="mobile-bb-section-title">Top 3 Busts</div>
+          <div class="mobile-bb-players-list">
+            {% for player in row.busts %}
+            <div class="mobile-bb-player-item bust">
+              <img class="mobile-bb-player-nfl-logo" src="{{ player.nfl_logo }}" alt="{{ player.nfl_team }} logo" />
+              <div class="mobile-bb-player-info">
+                <div class="mobile-bb-player-name">{{ player.player_name }}</div>
+                <div class="mobile-bb-player-team">{{ player.fantasy_team }}</div>
+              </div>
+              <div class="mobile-bb-player-points">{{ player.points }} pts</div>
+            </div>
+            {% empty %}
+            <div class="mobile-bb-player-item bust no-data">
+              <div class="bb-player-info">
+                <div class="bb-player-name muted">No data</div>
+              </div>
+            </div>
+            {% endfor %}
+          </div>
         </div>
       </div>
     </div>
+    {% endfor %}
   </div>
+
   <script>
     (function() {
-      const overviewEndpoint = "{% url 'weekly_report_overview_api' year=year week=week %}";
-      function setText(id, text) {
-        const el = document.getElementById(id);
-        if (el) { el.textContent = text || ''; }
-      }
-      function hideSpinner(id) {
-        const spinner = document.getElementById(id);
-        if (spinner) { spinner.classList.add('hidden'); }
-      }
-      function showError(id, spinnerId, msg) {
-        hideSpinner(spinnerId);
-        const el = document.getElementById(id);
-        if (el) { el.innerHTML = `<span class="loading">${msg}</span>`; }
-      }
-      // Fetch smaller chunks in parallel
-      function poll(endpoint, onOk, onError) {
-        fetch(endpoint)
-          .then(r => {
-            if (r.status === 202) throw new Error('pending');
-            if (!r.ok) throw new Error('error');
-            return r.json();
-          })
-          .then(onOk)
-          .catch(() => {
-            onError();
-            setTimeout(() => poll(endpoint, onOk, onError), 4000);
-          });
-      }
-
-      poll(overviewEndpoint, (d) => {
-        setText('overview', d.overview || '');
-        hideSpinner('overview-spinner');
-      }, () => {
-        showError('overview', 'overview-spinner', 'Overview is taking longer than usual…');
-      });
-
-      function sizeWeeklyScores() {
-        const card = document.getElementById('scores-card');
-        const table = document.getElementById('scores-table');
-        if (!card || !table) return;
-        // Compute available height beneath the header inside the card
-        const cardRect = card.getBoundingClientRect();
-        const tableRect = table.getBoundingClientRect();
-        const available = Math.max(0, cardRect.height - (tableRect.top - cardRect.top) - 8);
-        table.style.height = available + 'px';
-
-        const rows = table.querySelectorAll('tbody > tr');
-        if (rows.length > 0) {
-          const per = Math.max(48, Math.floor(available / rows.length));
-          rows.forEach(r => { r.style.height = per + 'px'; });
+      // Overview loading and error handling
+      const overviewElement = document.getElementById('overview');
+      const overviewSpinner = document.getElementById('overview-spinner');
+      
+      // Function to load overview content
+      async function loadOverview() {
+        try {
+          const response = await fetch(`{% url 'weekly_report_overview_api' year=year week=week %}`);
+          if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+          }
+          const data = await response.json();
+          
+          if (data.overview) {
+            overviewElement.innerHTML = data.overview;
+          } else {
+            overviewElement.innerHTML = '<span class="error">No overview available.</span>';
+          }
+        } catch (error) {
+          console.error('Error loading overview:', error);
+          overviewElement.innerHTML = '<span class="error">Failed to load overview. Please try again later.</span>';
+        } finally {
+          if (overviewSpinner) {
+            overviewSpinner.style.display = 'none';
+          }
         }
       }
-      window.addEventListener('resize', sizeWeeklyScores);
-      // Defer to next frame so layout is stable
-      requestAnimationFrame(sizeWeeklyScores);
-
-      // Simple tabs in left aside
-      const tabButtons = document.querySelectorAll('.tab-btn');
-      tabButtons.forEach(btn => {
-        btn.addEventListener('click', () => {
-          const tab = btn.getAttribute('data-tab');
-          document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-          btn.classList.add('active');
-          document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
-          const target = document.getElementById(`tab-${tab}`);
-          if (target) target.classList.add('active');
-        });
-      });
+      
+      // Load overview when page loads
+      loadOverview();
     })();
   </script>
 </body>

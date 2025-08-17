@@ -113,15 +113,16 @@ def _nfl_logo_url(code: Any) -> str | None:
     return f"https://static.www.nfl.com/league/api/clubs/logos/{abbr}.svg"
 
 
-def _winner_from_scoreboard_highest(scoreboard: List[Dict[str, Any]]) -> Tuple[str, float] | None:
+def _winner_from_scoreboard_highest(scoreboard: List[Dict[str, Any]]) -> Tuple[str, float, str | None] | None:
     best_name = None
     best_score = None
+    best_owner = None
     for m in scoreboard:
         candidates = [
-            (m.get("home_team"), m.get("home_score"), m.get("home_id")),
-            (m.get("away_team"), m.get("away_score"), m.get("away_id")),
+            (m.get("home_team"), m.get("home_score"), m.get("home_id"), m.get("home_owner")),
+            (m.get("away_team"), m.get("away_score"), m.get("away_id"), m.get("away_owner")),
         ]
-        for name, score, tid in candidates:
+        for name, score, tid, owner in candidates:
             # Skip BYE and unknown teams (we set id=None for BYE in scoreboard)
             if tid is None:
                 continue
@@ -130,21 +131,22 @@ def _winner_from_scoreboard_highest(scoreboard: List[Dict[str, Any]]) -> Tuple[s
             except Exception:
                 val = None
             if name and val is not None and (best_score is None or val > best_score):
-                best_name, best_score = name, val
+                best_name, best_score, best_owner = name, val, owner
     if best_name is None or best_score is None:
         return None
-    return best_name, best_score
+    return best_name, best_score, best_owner
 
 
-def _winner_from_scoreboard_lowest(scoreboard: List[Dict[str, Any]]) -> Tuple[str, float] | None:
+def _winner_from_scoreboard_lowest(scoreboard: List[Dict[str, Any]]) -> Tuple[str, float, str | None] | None:
     worst_name = None
     worst_score = None
+    worst_owner = None
     for m in scoreboard:
         candidates = [
-            (m.get("home_team"), m.get("home_score"), m.get("home_id")),
-            (m.get("away_team"), m.get("away_score"), m.get("away_id")),
+            (m.get("home_team"), m.get("home_score"), m.get("home_id"), m.get("home_owner")),
+            (m.get("away_team"), m.get("away_score"), m.get("away_id"), m.get("away_owner")),
         ]
-        for name, score, tid in candidates:
+        for name, score, tid, owner in candidates:
             # Skip BYE and unknown teams (we set id=None for BYE in scoreboard)
             if tid is None:
                 continue
@@ -153,10 +155,10 @@ def _winner_from_scoreboard_lowest(scoreboard: List[Dict[str, Any]]) -> Tuple[st
             except Exception:
                 val = None
             if name and val is not None and (worst_score is None or val < worst_score):
-                worst_name, worst_score = name, val
+                worst_name, worst_score, worst_owner = name, val, owner
     if worst_name is None or worst_score is None:
         return None
-    return worst_name, worst_score
+    return worst_name, worst_score, worst_owner
 
 
 def _winner_closest_game(incentives_summary: Dict[str, Any]) -> Tuple[str, float] | None:
@@ -227,13 +229,15 @@ def compute_incentive_winner(
     if key == "highest_team_score":
         res = _winner_from_scoreboard_highest(scoreboard)
         if res:
-            name, pts = res
-            winner_text = f"{name} ({pts})"
+            name, pts, owner = res
+            owner_text = f" ({owner})" if owner else ""
+            winner_text = f"{name}{owner_text} ({pts})"
     elif key == "lowest_team_score":
         res = _winner_from_scoreboard_lowest(scoreboard)
         if res:
-            name, pts = res
-            winner_text = f"{name} ({pts})"
+            name, pts, owner = res
+            owner_text = f" ({owner})" if owner else ""
+            winner_text = f"{name}{owner_text} ({pts})"
     elif key == "closest_game":
         res = _winner_closest_game(incentives_summary)
         if res:
@@ -434,28 +438,32 @@ def compute_weekly_awards(
     # Manager of the Week: highest team score
     best_name: str | None = None
     best_score: float | None = None
+    best_owner: str | None = None
     for m in scoreboard:
-        for name, score in ((m.get("home_team"), m.get("home_score")), (m.get("away_team"), m.get("away_score"))):
+        for name, score, owner in ((m.get("home_team"), m.get("home_score"), m.get("home_owner")), (m.get("away_team"), m.get("away_score"), m.get("away_owner"))):
             try:
                 val = float(score)
             except Exception:
                 val = None
             if name and val is not None and (best_score is None or val > best_score):
-                best_name, best_score = name, val
+                best_name, best_score, best_owner = name, val, owner
     if best_name is not None and best_score is not None:
+        owner_text = f" ({best_owner})" if best_owner else ""
         awards.append({
             "title": "Manager of the Week",
-            "text": f"{best_name} – {round(best_score,1)} points",
+            "text": f"{best_name}{owner_text} – {round(best_score,1)} points",
         })
 
     # Squeaker: lowest winning score
     lowest_win_name: str | None = None
     lowest_win_points: float | None = None
+    lowest_win_owner: str | None = None
     for m in scoreboard:
         winner = m.get("winner")
         if not winner:
             continue
         win_pts = m.get("home_score") if winner == m.get("home_team") else m.get("away_score")
+        win_owner = m.get("home_owner") if winner == m.get("home_team") else m.get("away_owner")
         try:
             val = float(win_pts)
         except Exception:
@@ -463,16 +471,20 @@ def compute_weekly_awards(
         if lowest_win_points is None or val < lowest_win_points:
             lowest_win_points = val
             lowest_win_name = winner
+            lowest_win_owner = win_owner
     if lowest_win_name is not None and lowest_win_points is not None:
+        owner_text = f" ({lowest_win_owner})" if lowest_win_owner else ""
         awards.append({
             "title": "Squeaker",
-            "text": f"Lowest winning score: {lowest_win_name} – {round(lowest_win_points,1)}",
+            "text": f"Lowest winning score: {lowest_win_name}{owner_text} – {round(lowest_win_points,1)}",
         })
 
     # Heartbreaker: closest loss
     heartbreak_loser: str | None = None
     heartbreak_winner: str | None = None
     heartbreak_margin: float | None = None
+    heartbreak_loser_owner: str | None = None
+    heartbreak_winner_owner: str | None = None
     for m in scoreboard:
         winner = m.get("winner")
         if not winner:
@@ -484,20 +496,28 @@ def compute_weekly_awards(
             continue
         # loser is the other team
         loser = m.get("home_team") if winner == m.get("away_team") else m.get("away_team")
+        loser_owner = m.get("home_owner") if loser == m.get("home_team") else m.get("away_owner")
+        winner_owner = m.get("home_owner") if winner == m.get("home_team") else m.get("away_owner")
         if heartbreak_margin is None or mg < heartbreak_margin:
             heartbreak_margin = mg
             heartbreak_loser = loser
             heartbreak_winner = winner
+            heartbreak_loser_owner = loser_owner
+            heartbreak_winner_owner = winner_owner
     if heartbreak_loser and heartbreak_winner and heartbreak_margin is not None:
+        loser_owner_text = f" ({heartbreak_loser_owner})" if heartbreak_loser_owner else ""
+        winner_owner_text = f" ({heartbreak_winner_owner})" if heartbreak_winner_owner else ""
         awards.append({
             "title": "Heartbreaker",
-            "text": f"{heartbreak_loser} lost to {heartbreak_winner} by {round(heartbreak_margin,1)}",
+            "text": f"{heartbreak_loser}{loser_owner_text} lost to {heartbreak_winner}{winner_owner_text} by {round(heartbreak_margin,1)}",
         })
 
     # Giant Killer: upset where winner had worse rank than opponent; take biggest rank delta
     upset_winner: str | None = None
     upset_loser: str | None = None
     upset_delta: int | None = None
+    upset_winner_owner: str | None = None
+    upset_loser_owner: str | None = None
     for m in scoreboard:
         winner = m.get("winner")
         if not winner:
@@ -505,6 +525,8 @@ def compute_weekly_awards(
         home = m.get("home_team")
         away = m.get("away_team")
         loser = away if winner == home else home
+        winner_owner = m.get("home_owner") if winner == home else m.get("away_owner")
+        loser_owner = m.get("home_owner") if loser == home else m.get("away_owner")
         w_rank = name_to_rank.get(winner)
         l_rank = name_to_rank.get(loser)
         if isinstance(w_rank, int) and isinstance(l_rank, int) and w_rank > l_rank:
@@ -513,10 +535,14 @@ def compute_weekly_awards(
                 upset_delta = delta
                 upset_winner = winner
                 upset_loser = loser
+                upset_winner_owner = winner_owner
+                upset_loser_owner = loser_owner
     if upset_winner and upset_loser and upset_delta is not None:
+        winner_owner_text = f" ({upset_winner_owner})" if upset_winner_owner else ""
+        loser_owner_text = f" ({upset_loser_owner})" if upset_loser_owner else ""
         awards.append({
             "title": "Giant Killer",
-            "text": f"{upset_winner} upset {upset_loser} (by ranking, +{upset_delta})",
+            "text": f"{upset_winner}{winner_owner_text} upset {upset_loser}{loser_owner_text} (by ranking, +{upset_delta})",
         })
 
     # Bench Blunder: most total bench points
@@ -531,9 +557,16 @@ def compute_weekly_awards(
         bench_points[p["fantasy_team"]] = bench_points.get(p["fantasy_team"], 0.0) + pts
     if bench_points:
         team, total = max(bench_points.items(), key=lambda kv: kv[1])
+        # Get owner name from standings
+        team_owner = None
+        for s in standings:
+            if s.get("team_name") == team:
+                team_owner = s.get("owner_name")
+                break
+        owner_text = f" ({team_owner})" if team_owner else ""
         awards.append({
             "title": "Bench Blunder",
-            "text": f"{team} – {round(total,1)} points left on bench",
+            "text": f"{team}{owner_text} – {round(total,1)} points left on bench",
         })
 
     return awards

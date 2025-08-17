@@ -51,6 +51,21 @@ def get_scoreboard(league: League, week: int) -> List[Dict[str, Any]]:
             away_logo = None
             away_id = None
 
+        # Get owner information for both teams
+        home_owner = None
+        away_owner = None
+        if home_id is not None:
+            home_team_obj = next((t for t in league.teams if t.team_id == home_id), None)
+            if home_team_obj and hasattr(home_team_obj, 'owners') and home_team_obj.owners:
+                owner = home_team_obj.owners[0]
+                home_owner = f"{owner.get('firstName', '')} {owner.get('lastName', '')}".strip()
+        
+        if away_id is not None:
+            away_team_obj = next((t for t in league.teams if t.team_id == away_id), None)
+            if away_team_obj and hasattr(away_team_obj, 'owners') and away_team_obj.owners:
+                owner = away_team_obj.owners[0]
+                away_owner = f"{owner.get('firstName', '')} {owner.get('lastName', '')}".strip()
+
         diff = (hs - as_) if isinstance(hs, (int, float)) and isinstance(as_, (int, float)) else 0.0
         matchups.append({
             "home_id": home_id,
@@ -61,6 +76,8 @@ def get_scoreboard(league: League, week: int) -> List[Dict[str, Any]]:
             "away_logo": away_logo,
             "home_score": hs,
             "away_score": as_,
+            "home_owner": home_owner,
+            "away_owner": away_owner,
             "margin": abs(diff),
             "winner": home_name if diff > 0 else (away_name if diff < 0 else None),
         })
@@ -76,11 +93,19 @@ def _compute_standings_through_week(league: League, through_week: int) -> List[D
     for t in league.teams:
         abbrev = getattr(t, "team_abbrev", getattr(t, "abbrev", None))
         logo_url = getattr(t, "logo_url", None)
+        
+        # Get owner information
+        owner_name = None
+        if hasattr(t, 'owners') and t.owners:
+            owner = t.owners[0]
+            owner_name = f"{owner.get('firstName', '')} {owner.get('lastName', '')}".strip()
+        
         team_stats[t.team_id] = {
             "team_id": t.team_id,
             "team_name": t.team_name,
             "team_abbrev": abbrev,
             "logo_url": logo_url,
+            "owner_name": owner_name,
             "wins": 0,
             "losses": 0,
             "ties": 0,
