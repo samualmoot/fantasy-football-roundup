@@ -895,7 +895,8 @@ ul {
   align-items: center;
   gap: 12px;
   flex-shrink: 0;
-  min-width: 280px; /* Increased width for better visibility */
+  min-width: 0; /* Allow shrinking on smaller screens */
+  max-width: 280px; /* Maximum width for larger screens */
   position: absolute;
   left: 20px;
   top: 50%;
@@ -907,7 +908,8 @@ ul {
   align-items: center;
   gap: 12px;
   flex-shrink: 0;
-  min-width: 280px; /* Increased width for better visibility */
+  min-width: 0; /* Allow shrinking on smaller screens */
+  max-width: 280px; /* Maximum width for larger screens */
   position: absolute;
   right: 20px;
   top: 50%;
@@ -921,8 +923,9 @@ ul {
   flex-direction: column;
   gap: 2px;
   min-width: 0;
-  max-width: 240px; /* Increased width for longer team names */
-  flex-shrink: 0; /* Prevent shrinking */
+  max-width: 240px; /* Maximum width for longer team names */
+  flex-shrink: 1; /* Allow shrinking on smaller screens */
+  overflow: hidden; /* Prevent text overflow */
 }
 
 /* Scores and VS container - centered in card */
@@ -1140,6 +1143,302 @@ ul {
   
   .position-grid {
     grid-template-columns: 1fr;
+  }
+}
+
+/* iPad and tablet-specific layout */
+@media (min-width: 769px) and (max-width: 1024px) {
+  /* Single column layout for iPad - stack everything vertically */
+  .grid {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto auto auto auto auto;
+    gap: 20px;
+    max-width: 100%;
+    margin: 0 20px;
+  }
+  
+  /* Make overview section more compact */
+  .overview-section {
+    margin-bottom: 16px;
+  }
+  
+  /* Adjust card padding for iPad */
+  .card {
+    padding: 20px;
+  }
+  
+  /* Make weekly scores more compact on iPad */
+  .scores-section {
+    margin-bottom: 16px;
+  }
+  
+  /* Adjust standings for iPad */
+  .standings-aside {
+    margin-bottom: 16px;
+  }
+  
+  /* Make booms & busts single column on iPad */
+  .bb-positions-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+  
+  /* Use mobile-style weekly scores layout for iPad */
+  .desktop-scores {
+    display: none !important;
+  }
+  
+  .mobile-scores {
+    display: grid !important;
+    gap: 16px;
+  }
+  
+  /* Make team logos appropriate size for iPad */
+  .mobile-score-team .team-logo {
+    width: 48px !important;
+    height: 48px !important;
+  }
+  
+  /* Adjust text sizes for iPad */
+  .mobile-score-team .team-name {
+    font-size: 1rem;
+  }
+  
+  .mobile-score-team .team-owner {
+    font-size: 0.85rem;
+  }
+  
+  .mobile-score-team .team-record {
+    font-size: 0.8rem;
+  }
+  
+  /* Make standings more compact on iPad */
+  .standing-team {
+    padding: 16px;
+  }
+  
+  .standing-team-info .team-name {
+    font-size: 1rem;
+  }
+  
+  .standing-team-info .team-owner {
+    font-size: 0.85rem;
+  }
+  
+  /* Fix booms & busts for iPad */
+  .bb-position-card {
+    overflow: visible;
+    min-width: 0;
+    padding: 12px;
+  }
+  
+  .bb-player-item {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  
+  .bb-player-name,
+  .bb-player-team {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
+
+/* iPad Portrait Mode Specific Adjustments */
+@media (min-width: 769px) and (max-width: 1024px) and (orientation: portrait) {
+  /* Single column layout for iPad portrait */
+  .grid {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+  
+  /* Make booms & busts single column on portrait */
+  .bb-positions-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+  
+  /* Adjust weekly scores for portrait */
+  .score-matchup-card {
+    padding: 16px;
+    gap: 12px;
+    position: relative; /* Ensure proper positioning context */
+  }
+  
+  /* Fix text overflow issues on iPad portrait */
+  .score-team-left,
+  .score-team-right {
+    max-width: 180px; /* Even smaller on portrait */
+    min-width: 0;
+  }
+  
+  .score-team-details {
+    max-width: 140px; /* Smaller on portrait */
+    overflow: hidden;
+  }
+  
+  .score-team-name,
+  .score-team-owner {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  
+  /* Make team logos larger on portrait for better touch targets */
+  .score-matchup-card .team-logo {
+    width: 48px !important;
+    height: 48px !important;
+  }
+  
+  /* Increase text sizes for better readability on portrait */
+  .score-team-name {
+    font-size: 1rem;
+  }
+  
+  .score-team-owner {
+    font-size: 0.8rem;
+  }
+  
+  .score-team-record {
+    font-size: 0.8rem;
+  }
+  
+  /* Adjust standings for portrait */
+  .standing-team {
+    padding: 16px;
+  }
+  
+  .standing-team-info .team-name {
+    font-size: 1rem;
+  }
+  
+  .standing-team-info .team-owner {
+    font-size: 0.8rem;
+  }
+  
+  /* Fix booms & busts text overflow on iPad */
+  .bb-position-card {
+    overflow: visible; /* Allow content to be visible */
+    min-width: 0;
+  }
+  
+  .bb-player-item {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  
+  .bb-player-name,
+  .bb-player-team {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
+
+/* iPad Pro and larger tablets */
+@media (min-width: 1025px) and (max-width: 1366px) {
+  /* Optimize for iPad Pro landscape */
+  .grid {
+    grid-template-columns: 1.2fr 2.5fr; /* Slightly wider right column */
+    gap: 24px;
+    max-width: 1200px;
+  }
+  
+  /* Make weekly scores more prominent on iPad Pro */
+  .scores-section {
+    margin-bottom: 20px;
+  }
+  
+  /* Optimize booms & busts for iPad Pro */
+  .bb-positions-grid {
+    grid-template-columns: repeat(3, 1fr); /* Back to 3 columns on larger screens */
+    gap: 16px;
+  }
+  
+  /* Adjust card padding for iPad Pro */
+  .card {
+    padding: 24px;
+  }
+  
+  /* Make team logos optimal size for iPad Pro */
+  .score-matchup-card .team-logo {
+    width: 44px !important;
+    height: 44px !important;
+  }
+  
+  /* Fix text overflow issues on iPad Pro */
+  .score-team-left,
+  .score-team-right {
+    max-width: 220px; /* Slightly larger on iPad Pro */
+    min-width: 0;
+  }
+  
+  .score-team-details {
+    max-width: 180px; /* Larger on iPad Pro */
+    overflow: hidden;
+  }
+  
+  .score-team-name,
+  .score-team-owner {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  
+  /* Fix booms & busts text overflow on iPad Pro */
+  .bb-position-card {
+    overflow: visible;
+    min-width: 0;
+  }
+  
+  .bb-player-item {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  
+  .bb-player-name,
+  .bb-player-team {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
+
+/* Touch-friendly improvements for all iPads */
+@media (min-width: 769px) and (max-width: 1366px) {
+  /* Increase touch targets for better iPad usability */
+  .score-matchup-card {
+    cursor: pointer;
+    transition: transform 0.2s ease;
+  }
+  
+  .score-matchup-card:hover {
+    transform: translateY(-2px);
+  }
+  
+  .standing-team {
+    cursor: pointer;
+    transition: transform 0.2s ease;
+  }
+  
+  .standing-team:hover {
+    transform: translateY(-1px);
+  }
+  
+  /* Make buttons more touch-friendly */
+  .btn {
+    min-height: 44px; /* Apple's recommended minimum touch target */
+    padding: 12px 20px;
+  }
+  
+  /* Improve scrolling on iPad */
+  .draft-list-content,
+  .bb-positions-grid {
+    -webkit-overflow-scrolling: touch;
   }
 }
 

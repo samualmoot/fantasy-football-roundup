@@ -46,10 +46,16 @@
         <div class="weekly">${{ weekly_prize }} Weekly Incentive</div>
       </div>
 
-      <a href="{% url 'weekly_report' year=current_year week=default_week %}" class="cta-button" style="margin-top: 24px;">
-        🏈 View Latest Report
-        <span>→</span>
-      </a>
+      <div class="cta-buttons">
+        <a href="{% url 'weekly_report' year=current_year week=default_week %}" class="cta-button">
+          🏈 View Latest Report
+          <span>→</span>
+        </a>
+        <a href="{% url 'draft_analysis' %}" class="cta-button secondary">
+          📊 Draft Analysis
+          <span>→</span>
+        </a>
+      </div>
     </section>
   </div>
 

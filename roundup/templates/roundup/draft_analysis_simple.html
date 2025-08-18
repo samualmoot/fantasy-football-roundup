@@ -1,0 +1,133 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Draft Analysis - {{ league_name }} {{ league_year }}</title>
+    <link rel="stylesheet" href="{% static 'roundup/draft_analysis.css' %}">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏈</text></svg>">
+</head>
+<body>
+    <header class="header">
+        <div class="header-content">
+            <h1>🏈 Draft Analysis</h1>
+            <p class="league-info">{{ league_name }} - {{ league_year }}</p>
+            <nav class="nav">
+                <a href="{% url 'homepage' %}" class="btn">← Back to Home</a>
+            </nav>
+        </div>
+    </header>
+
+    <main class="main-content">
+        {% if error %}
+            <div class="error-message">
+                <h2>⚠️ Error Loading Draft Data</h2>
+                <p>{{ error }}</p>
+            </div>
+        {% else %}
+
+
+
+
+            <!-- Round Selection -->
+            <section class="round-selection">
+                <h2>🎯 Select Round</h2>
+                <div class="round-buttons">
+                    {% for round_num in "123456789012345678901234567890"|make_list %}
+                        {% if forloop.counter <= draft_data.rounds %}
+                        <button class="round-btn {% if forloop.counter == 1 %}active{% endif %}" 
+                                data-round="{{ forloop.counter }}">
+                            Round {{ forloop.counter }}
+                        </button>
+                        {% endif %}
+                    {% endfor %}
+                </div>
+            </section>
+
+            <!-- Simple Draft Display -->
+            <section class="simple-draft">
+                <h2>📋 Draft Picks by Round</h2>
+                <div class="draft-list">
+                    <div class="draft-list-content">
+                        <div class="draft-header">
+                            <div class="header-pick">NO.</div>
+                            <div class="header-player">PLAYER</div>
+                            <div class="header-team">TEAM</div>
+                        </div>
+                        {% for pick in draft_data.draft_picks %}
+                        <div class="draft-pick-row" data-round="{{ pick.round }}" style="{% if pick.round != 1 %}display: none;{% endif %}">
+                            <div class="pick-number">{{ pick.overall_pick }}</div>
+                            <div class="player-info">
+                                <div class="player-row">
+                                    <div class="nfl-logo-small">
+                                        {% if pick.nfl_team %}
+                                            <img src="https://a.espncdn.com/i/teamlogos/nfl/500/{{ pick.nfl_team|lower }}.png" 
+                                                 alt="{{ pick.nfl_team }} logo" 
+                                                 class="nfl-team-logo-small"
+                                                 onerror="this.style.display='none';">
+                                        {% endif %}
+                                    </div>
+                                    <div class="player-details-text">
+                                        <span class="player-name">{{ pick.player_name }}</span>
+                                        <span class="player-details">{{ pick.nfl_team|default:"N/A" }}, {{ pick.position|default:"N/A" }}</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="fantasy-team-section">
+                                <div class="team-info">
+                                    <div class="fantasy-team">{{ pick.team_name }}</div>
+                                    {% if pick.owner_name %}
+                                        <div class="team-owner">{{ pick.owner_name }}</div>
+                                    {% endif %}
+                                </div>
+                                <div class="team-logo-small">
+                                    {% if pick.team_id %}
+                                        <img src="{% url 'team_logo' team_id=pick.team_id %}" alt="{{ pick.team_name }} logo" class="team-logo-img">
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </section>
+
+
+        {% endif %}
+    </main>
+
+    <script>
+
+
+        // Round selection functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const roundButtons = document.querySelectorAll('.round-btn');
+            const draftPicks = document.querySelectorAll('.draft-pick-simple');
+            
+
+            
+            // Handle round button clicks
+            roundButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    const selectedRound = this.dataset.round;
+                    
+                    // Update active button
+                    roundButtons.forEach(btn => btn.classList.remove('active'));
+                    this.classList.add('active');
+                    
+                    // Show/hide picks based on selected round
+                    const draftPicks = document.querySelectorAll('.draft-pick-row');
+                    draftPicks.forEach(pick => {
+                        if (pick.dataset.round === selectedRound) {
+                            pick.style.display = 'grid';
+                        } else {
+                            pick.style.display = 'none';
+                        }
+                    });
+                });
+            });
+        });
+    </script>
+</body>
+</html>

@@ -1,6 +1,9 @@
 from django.shortcuts import render, redirect
 from django.http import HttpRequest, HttpResponse, JsonResponse, HttpResponseNotFound
 from django.utils.crypto import salted_hmac
+import logging
+
+logger = logging.getLogger(__name__)
 
 from .espn_utils import get_league, get_playoff_team_count
 from .services.espn_service import (
@@ -21,6 +24,7 @@ from .incentives import (
     compute_weekly_awards,
 )
 from .services.report_builder import compute_incentives, build_prompt_inputs
+from .services.draft_service import get_draft_analysis
 from .ai_client import (
     generate_weekly_narrative,
     generate_overview,
@@ -253,3 +257,34 @@ def weekly_report_highlights_api(request: HttpRequest, year: int, week: int) -> 
         return JsonResponse({"status": "pending"}, status=202)
     result = get_job_result(cache_key)
     return JsonResponse(result or {"matchup_highlights": ""})
+
+
+def draft_analysis(request):
+    """
+    Display the draft analysis page with snake draft visualization.
+    """
+    try:
+        league = get_league()
+        draft_data = get_draft_analysis(league)
+        
+        context = {
+            'league_name': getattr(getattr(league, "settings", None), "name", str(league.league_id)),
+            'league_year': getattr(league, "year", "Unknown"),
+            'draft_data': draft_data,
+        }
+        
+        return render(request, 'roundup/draft_analysis_simple.html', context)
+        
+    except Exception as e:
+        logger.error(f"Error loading draft analysis: {e}")
+        context = {
+            'error': f"Unable to load draft data: {str(e)}",
+            'draft_data': {
+                "draft_picks": [],
+                "team_drafts": [],
+                "rounds": 0,
+                "total_picks": 0,
+                "teams_count": 0
+            }
+        }
+        return render(request, 'roundup/draft_analysis_simple.html', context)

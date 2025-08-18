@@ -66,7 +66,7 @@
           <div class="standing-stats">
             <div class="record-badge">{{ t.wins }}-{{ t.losses }}-{{ t.ties }}</div>
             <div class="points-display">{{ t.points_for }}</div>
-          </div>
+        </div>
         </div>
         {% endfor %}
       </div>
@@ -163,10 +163,10 @@
             </div>
             {% if m.away_id and m.away_logo %}
               <img class="score-team-logo" src="{% url 'team_logo' team_id=m.away_id %}" alt="{{ m.away_team }} logo" />
-            {% endif %}
+              {% endif %}
           </div>
-        </div>
-        {% endfor %}
+              </div>
+          {% endfor %}
       </div>
       
       <!-- Mobile Scores - Simplified Layout -->
@@ -208,19 +208,19 @@
 
     <!-- Mobile Standings Layout - Positioned below weekly scores -->
     <div class="mobile-standings">
-      {% for t in standings %}
+          {% for t in standings %}
       <div class="mobile-standing-item {% if t.rank <= playoff_team_count %}playoff{% endif %} {% if t.rank == playoff_team_count %}cutoff{% endif %}">
         <div class="mobile-standing-rank">#{{ t.rank }}</div>
         <div class="mobile-standing-team">
           <div class="mobile-team-name">{{ t.team_name }}</div>
           {% if t.owner_name %}<div class="mobile-team-owner">{{ t.owner_name }}</div>{% endif %}
-          {% if t.movement_abs %}
-            {% if t.movement_is_up %}
-              <span class="move up">▲ {{ t.movement_abs }}</span>
-            {% else %}
-              <span class="move down">▼ {{ t.movement_abs }}</span>
-            {% endif %}
-          {% endif %}
+              {% if t.movement_abs %}
+                {% if t.movement_is_up %}
+                  <span class="move up">▲ {{ t.movement_abs }}</span>
+                {% else %}
+                  <span class="move down">▼ {{ t.movement_abs }}</span>
+                {% endif %}
+              {% endif %}
         </div>
         <div class="mobile-standing-stats">
           <div class="mobile-standing-record">{{ t.wins }}-{{ t.losses }}-{{ t.ties }}</div>
@@ -354,7 +354,7 @@
         </div>
       </div>
     </div>
-    {% endfor %}
+          {% endfor %}
   </div>
 
   <script>

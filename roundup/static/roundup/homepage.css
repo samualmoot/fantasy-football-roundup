@@ -49,6 +49,14 @@ body {
 /* Minimal homepage */
 .hero p { display: none; }
 
+.cta-buttons {
+  display: flex;
+  gap: 16px;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-top: 24px;
+}
+
 .cta-button {
   display: inline-flex; align-items: center; gap: 12px; padding: 16px 32px;
   background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
@@ -56,6 +64,13 @@ body {
   border-radius: 16px; box-shadow: var(--shadow-lg); transition: all 0.3s ease; border: none; cursor: pointer;
 }
 .cta-button:hover { transform: translateY(-2px); box-shadow: var(--shadow-xl); }
+
+.cta-button.secondary {
+  background: linear-gradient(135deg, var(--gray-600) 0%, var(--gray-700) 100%);
+}
+.cta-button.secondary:hover {
+  background: linear-gradient(135deg, var(--gray-700) 0%, var(--gray-800) 100%);
+}
 
 /* Dramatic amounts + players */
 .grand {
