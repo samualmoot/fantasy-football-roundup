@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
   {% load static %}
+  {% load dict_extras %}
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <title>The Garitty Bowl</title>
@@ -22,7 +23,9 @@
         {% for t in standings %}
         <div class="player-card">
           <div class="player-avatar">
-            {% if t.team_id and t.logo_url %}
+            {% if t.team_id and team_logos|get_item:t.team_id %}
+              <img src="{{ team_logos|get_item:t.team_id }}" alt="{{ t.team_name }} logo" />
+            {% elif t.team_id and t.logo_url %}
               <img src="{% url 'team_logo' team_id=t.team_id %}" alt="{{ t.team_name }} logo" />
             {% else %}
               {{ t.team_abbrev|default:t.team_name|slice:":2"|upper }}

@@ -1,3 +1,3 @@
-"""Template tags package for roundup app."""
+# Templatetags package
 
 

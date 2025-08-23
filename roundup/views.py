@@ -48,11 +48,17 @@ def homepage(request):
     # Use current league standings to enumerate players/teams
     league = get_league(year=current_year)
     standings = get_standings_with_movement(league, default_week)
+    
+    # Preload all team logos for better performance
+    from .services.logo_service import bulk_preload_logos_for_context
+    teams = getattr(league, "teams", []) or []
+    team_logos = bulk_preload_logos_for_context(teams)
 
     context = {
         'current_year': current_year,
         'default_week': default_week,
         'standings': standings,
+        'team_logos': team_logos,  # Pass logos to template
         # Prizes
         'grand_prize': 250,
         'weekly_prize': 8,
@@ -67,8 +73,16 @@ def team_logo(request: HttpRequest, team_id: int) -> HttpResponse:
     because they require the SWID/espn_s2 cookies. We fetch them server-side and
     stream the bytes with appropriate content-type and caching.
     """
-    # Resolve current year similar to homepage
+    from django.core.cache import cache
     from datetime import datetime
+    
+    # Check cache first
+    cache_key = f"team_logo_{team_id}"
+    cached_response = cache.get(cache_key)
+    if cached_response:
+        return cached_response
+    
+    # Resolve current year similar to homepage
     current_year = datetime.now().year
     try:
         league = get_league(year=current_year)
@@ -98,6 +112,9 @@ def team_logo(request: HttpRequest, team_id: int) -> HttpResponse:
             content_type = resp.headers.get("content-type", "image/png")
             response = HttpResponse(resp.content, content_type=content_type)
             response["Cache-Control"] = "public, max-age=86400"
+            
+            # Cache the response for 24 hours (86400 seconds)
+            cache.set(cache_key, response, 86400)
             return response
     except Exception:
         return HttpResponseNotFound()

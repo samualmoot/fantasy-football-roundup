@@ -128,3 +128,23 @@ if not DEBUG:
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# Cache Configuration
+# https://docs.djangoproject.com/en/5.2/topics/cache/
+
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+        'LOCATION': 'unique-snowflake',
+        'TIMEOUT': 86400,  # 24 hours default
+        'OPTIONS': {
+            'MAX_ENTRIES': 1000,
+            'CULL_FREQUENCY': 3,
+        }
+    }
+}
+
+# Cache timeouts for different types of data
+LOGO_CACHE_TIMEOUT = 86400  # 24 hours for team logos
+SCOREBOARD_CACHE_TIMEOUT = 3600  # 1 hour for scoreboard data
+STANDINGS_CACHE_TIMEOUT = 3600  # 1 hour for standings data
