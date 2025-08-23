@@ -47,29 +47,45 @@ def preload_nfl_team_logos() -> Dict[str, str]:
     Preload all NFL team logos and return a mapping of team abbreviation to logo data.
     This prevents individual API calls for each NFL logo.
     """
+    # ESPN uses different abbreviations than their logo service
+    # Map ESPN abbreviations to logo service abbreviations
+    espn_to_logo_mapping = {
+        'WSH': 'WAS',  # Washington Commanders
+        'LV': 'LV',    # Las Vegas Raiders
+        'LAC': 'LAC',  # Los Angeles Chargers
+        'LAR': 'LAR',  # Los Angeles Rams
+        # Add other mappings as needed
+    }
+    
+    # Standard NFL team abbreviations used by ESPN logo service
     nfl_teams = [
         'ARI', 'ATL', 'BAL', 'BUF', 'CAR', 'CHI', 'CIN', 'CLE', 'DAL', 'DEN',
         'DET', 'GB', 'HOU', 'IND', 'JAX', 'KC', 'LV', 'LAC', 'LAR', 'MIA',
         'MIN', 'NE', 'NO', 'NYG', 'NYJ', 'PHI', 'PIT', 'SEA', 'SF', 'TB', 'TEN', 'WAS'
     ]
-    
+
     nfl_logo_cache = {}
-    
+
     for team_abbr in nfl_teams:
         # Check if already cached
         cache_key = f"nfl_logo_{team_abbr.lower()}"
         cached_logo = cache.get(cache_key)
-        
+
         if cached_logo:
             nfl_logo_cache[team_abbr] = cached_logo
             continue
-            
+
         # Fetch and cache NFL logo
         logo_data = _fetch_nfl_team_logo(team_abbr)
         if logo_data:
             nfl_logo_cache[team_abbr] = logo_data
             cache.set(cache_key, logo_data, 86400)  # 24 hours
-    
+
+    # Now add mappings for ESPN abbreviations to the cached logos
+    for espn_abbr, logo_abbr in espn_to_logo_mapping.items():
+        if logo_abbr in nfl_logo_cache:
+            nfl_logo_cache[espn_abbr] = nfl_logo_cache[logo_abbr]
+
     return nfl_logo_cache
 
 

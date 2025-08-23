@@ -138,8 +138,28 @@ def weekly_report(request: HttpRequest, year: int, week: int) -> HttpResponse:
     prev_disabled = week <= first_week
     next_disabled = week >= last_week
 
-    scoreboard = get_scoreboard(league, week)
-    standings = get_standings_with_movement(league, week)
+    # Try to get cached data first
+    from .services.performance_cache import (
+        get_cached_scoreboard, cache_scoreboard,
+        get_cached_standings, cache_standings,
+        get_cached_incentives, cache_incentives,
+        get_cached_player_performances, cache_player_performances,
+        get_cached_position_leaders, cache_position_leaders,
+        get_cached_weekly_awards, cache_weekly_awards
+    )
+    
+    # Get or fetch scoreboard
+    scoreboard = get_cached_scoreboard(league, week)
+    if scoreboard is None:
+        scoreboard = get_scoreboard(league, week)
+        cache_scoreboard(league, week, scoreboard)
+    
+    # Get or fetch standings
+    standings = get_cached_standings(league, week)
+    if standings is None:
+        standings = get_standings_with_movement(league, week)
+        cache_standings(league, week, standings)
+    
     # Build mapping from team_id to record to enrich scoreboard display
     id_to_record = _build_team_id_to_record(standings)
     for m in scoreboard:
@@ -147,12 +167,28 @@ def weekly_report(request: HttpRequest, year: int, week: int) -> HttpResponse:
         aid = m.get("away_id")
         m["home_record"] = id_to_record.get(hid) if hid is not None else None
         m["away_record"] = id_to_record.get(aid) if aid is not None else None
-    incentives = compute_incentives(scoreboard)
-    incentives["top_players"] = get_top_players(league, week, top_n=3, nfl_logos=nfl_logos)
-    incentives["bottom_players"] = get_bottom_players(league, week, bottom_n=3, nfl_logos=nfl_logos)
-    # Build boom/bust by position (starters only)
-    all_performances = get_all_player_performances(league, week, nfl_logos)
-    incentives["boom_bust_by_position"] = compute_boom_bust_by_position(all_performances)
+    
+    # Get or fetch incentives
+    incentives = get_cached_incentives(league, week)
+    if incentives is None:
+        incentives = compute_incentives(scoreboard)
+        incentives["top_players"] = get_top_players(league, week, top_n=3, nfl_logos=nfl_logos)
+        incentives["bottom_players"] = get_bottom_players(league, week, bottom_n=3, nfl_logos=nfl_logos)
+        cache_incentives(league, week, incentives)
+    else:
+        # Still need to add player data with NFL logos
+        incentives["top_players"] = get_top_players(league, week, top_n=3, nfl_logos=nfl_logos)
+        incentives["bottom_players"] = get_bottom_players(league, week, bottom_n=3, nfl_logos=nfl_logos)
+    
+    # Get or fetch player performances
+    all_performances = get_cached_player_performances(league, week)
+    if all_performances is None:
+        all_performances = get_all_player_performances(league, week, nfl_logos)
+        cache_player_performances(league, week, all_performances)
+    
+    # Get or compute boom/bust by position
+    if "boom_bust_by_position" not in incentives:
+        incentives["boom_bust_by_position"] = compute_boom_bust_by_position(all_performances)
 
     # Determine regular season length and compute weekly incentive schedule
     # ESPN settings commonly expose finalScoringPeriod as last week index
@@ -173,8 +209,11 @@ def weekly_report(request: HttpRequest, year: int, week: int) -> HttpResponse:
         incentives_summary=incentives,
         performances=performances,
     )
-    # Position leaders/busts
-    position_leaders = compute_position_leaders(performances, top_n=1, bottom_n=1)
+    # Get or compute position leaders
+    position_leaders = get_cached_position_leaders(league, week)
+    if position_leaders is None:
+        position_leaders = compute_position_leaders(performances, top_n=1, bottom_n=1)
+        cache_position_leaders(league, week, position_leaders)
 
 
 
@@ -204,8 +243,14 @@ def weekly_report(request: HttpRequest, year: int, week: int) -> HttpResponse:
         "team_logos": team_logos,  # Add cached logos to context
         "nfl_logos": nfl_logos,  # Add cached NFL logos to context
     }
-    # Weekly awards
-    context["awards"] = compute_weekly_awards(scoreboard, standings, all_performances)
+    
+    # Get or compute weekly awards
+    weekly_awards = get_cached_weekly_awards(league, week)
+    if weekly_awards is None:
+        weekly_awards = compute_weekly_awards(scoreboard, standings, all_performances)
+        cache_weekly_awards(league, week, weekly_awards)
+    
+    context["awards"] = weekly_awards
     return render(request, "roundup/report.html", context)
 
 

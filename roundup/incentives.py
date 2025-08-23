@@ -394,7 +394,7 @@ def compute_boom_bust_by_position(
             "points": pts,
             "fantasy_team": p.get("fantasy_team") or "",
             "nfl_team": nfl_team,
-            "nfl_logo": _nfl_logo_url(nfl_team),
+            "nfl_logo": p.get("nfl_logo") or _nfl_logo_url(nfl_team),  # Use cached logo if available, fallback to URL
         }
 
     rows: List[Dict[str, str]] = []

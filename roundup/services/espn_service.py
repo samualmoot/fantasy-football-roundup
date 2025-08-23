@@ -1,19 +1,22 @@
 from typing import List, Dict, Any
 from espn_api.football import League
 import functools
-
-# Cache for box scores to avoid repeated API calls
-_box_score_cache = {}
+from .performance_cache import get_cached_box_scores, cache_box_scores
 
 def _get_cached_box_scores(league: League, week: int) -> List:
     """Get box scores with caching to avoid repeated API calls."""
-    cache_key = f"{league.league_id}_{league.year}_{week}"
-    if cache_key not in _box_score_cache:
-        try:
-            _box_score_cache[cache_key] = league.box_scores(week)
-        except Exception:
-            _box_score_cache[cache_key] = []
-    return _box_score_cache[cache_key]
+    # Try to get from Django cache first
+    cached = get_cached_box_scores(league, week)
+    if cached is not None:
+        return cached
+    
+    # If not cached, fetch from ESPN and cache
+    try:
+        box_scores = league.box_scores(week)
+        cache_box_scores(league, week, box_scores)
+        return box_scores
+    except Exception:
+        return []
 
 def get_scoreboard(league: League, week: int) -> List[Dict[str, Any]]:
     """
@@ -314,7 +317,7 @@ def get_all_player_performances(league: League, week: int, nfl_logos: Dict[str, 
             if nfl_logos and nfl_team:
                 nfl_logo = nfl_logos.get(nfl_team)
             
-            players.append({
+            player_data = {
                 "player_name": name,
                 "position": position,
                 "nfl_team": nfl_team,
@@ -322,7 +325,9 @@ def get_all_player_performances(league: League, week: int, nfl_logos: Dict[str, 
                 "fantasy_team": fantasy_team_name,
                 "is_bench": is_bench,
                 "nfl_logo": nfl_logo,
-            })
+            }
+            
+            players.append(player_data)
 
     for b in box_scores:
         home_team_obj = getattr(b, "home_team", None)
