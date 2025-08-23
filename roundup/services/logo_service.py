@@ -42,6 +42,56 @@ def preload_all_team_logos(teams: List) -> Dict[int, str]:
     return logo_cache
 
 
+def preload_nfl_team_logos() -> Dict[str, str]:
+    """
+    Preload all NFL team logos and return a mapping of team abbreviation to logo data.
+    This prevents individual API calls for each NFL logo.
+    """
+    nfl_teams = [
+        'ARI', 'ATL', 'BAL', 'BUF', 'CAR', 'CHI', 'CIN', 'CLE', 'DAL', 'DEN',
+        'DET', 'GB', 'HOU', 'IND', 'JAX', 'KC', 'LV', 'LAC', 'LAR', 'MIA',
+        'MIN', 'NE', 'NO', 'NYG', 'NYJ', 'PHI', 'PIT', 'SEA', 'SF', 'TB', 'TEN', 'WAS'
+    ]
+    
+    nfl_logo_cache = {}
+    
+    for team_abbr in nfl_teams:
+        # Check if already cached
+        cache_key = f"nfl_logo_{team_abbr.lower()}"
+        cached_logo = cache.get(cache_key)
+        
+        if cached_logo:
+            nfl_logo_cache[team_abbr] = cached_logo
+            continue
+            
+        # Fetch and cache NFL logo
+        logo_data = _fetch_nfl_team_logo(team_abbr)
+        if logo_data:
+            nfl_logo_cache[team_abbr] = logo_data
+            cache.set(cache_key, logo_data, 86400)  # 24 hours
+    
+    return nfl_logo_cache
+
+
+def _fetch_nfl_team_logo(team_abbr: str) -> Optional[str]:
+    """Fetch a single NFL team logo and return the data URL or None."""
+    logo_url = f"https://a.espncdn.com/i/teamlogos/nfl/500/{team_abbr.lower()}.png"
+    
+    try:
+        with httpx.Client(follow_redirects=True, timeout=5.0) as client:
+            resp = client.get(logo_url, headers={"User-Agent": "Mozilla/5.0"})
+            if resp.status_code == 200 and resp.content:
+                content_type = resp.headers.get("content-type", "image/png")
+                # Convert to data URL for inline use
+                import base64
+                encoded = base64.b64encode(resp.content).decode('utf-8')
+                return f"data:{content_type};base64,{encoded}"
+    except Exception as e:
+        logger.warning(f"Failed to fetch NFL logo for team {team_abbr}: {e}")
+    
+    return None
+
+
 def _fetch_team_logo(team) -> Optional[str]:
     """Fetch a single team logo and return the data URL or None."""
     logo_url = getattr(team, "logo_url", None)

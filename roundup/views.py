@@ -124,6 +124,12 @@ def weekly_report(request: HttpRequest, year: int, week: int) -> HttpResponse:
     league_name = getattr(getattr(league, "settings", None), "name", str(league.league_id))
     playoff_team_count = get_playoff_team_count(league)
 
+    # Preload all team logos for better performance (do this early)
+    from .services.logo_service import bulk_preload_logos_for_context, preload_nfl_team_logos
+    teams = getattr(league, "teams", []) or []
+    team_logos = bulk_preload_logos_for_context(teams)
+    nfl_logos = preload_nfl_team_logos()
+
     # Boundaries for navigation
     first_week = getattr(league, "firstScoringPeriod", 1) or 1
     last_week = getattr(league, "finalScoringPeriod", 18) or 18
@@ -142,10 +148,10 @@ def weekly_report(request: HttpRequest, year: int, week: int) -> HttpResponse:
         m["home_record"] = id_to_record.get(hid) if hid is not None else None
         m["away_record"] = id_to_record.get(aid) if aid is not None else None
     incentives = compute_incentives(scoreboard)
-    incentives["top_players"] = get_top_players(league, week, top_n=3)
-    incentives["bottom_players"] = get_bottom_players(league, week, bottom_n=3)
+    incentives["top_players"] = get_top_players(league, week, top_n=3, nfl_logos=nfl_logos)
+    incentives["bottom_players"] = get_bottom_players(league, week, bottom_n=3, nfl_logos=nfl_logos)
     # Build boom/bust by position (starters only)
-    all_performances = get_all_player_performances(league, week)
+    all_performances = get_all_player_performances(league, week, nfl_logos)
     incentives["boom_bust_by_position"] = compute_boom_bust_by_position(all_performances)
 
     # Determine regular season length and compute weekly incentive schedule
@@ -170,6 +176,8 @@ def weekly_report(request: HttpRequest, year: int, week: int) -> HttpResponse:
     # Position leaders/busts
     position_leaders = compute_position_leaders(performances, top_n=1, bottom_n=1)
 
+
+
     # Do NOT block on AI here; page should render immediately.
     # The narrative will be fetched asynchronously via a JSON endpoint.
     narrative = {}
@@ -193,6 +201,8 @@ def weekly_report(request: HttpRequest, year: int, week: int) -> HttpResponse:
             "next_title": describe_incentive_title(next_incentive_key),
         },
         "narrative": narrative,
+        "team_logos": team_logos,  # Add cached logos to context
+        "nfl_logos": nfl_logos,  # Add cached NFL logos to context
     }
     # Weekly awards
     context["awards"] = compute_weekly_awards(scoreboard, standings, all_performances)
@@ -216,10 +226,15 @@ def weekly_report_narrative_api(request: HttpRequest, year: int, week: int) -> J
 def weekly_report_overview_api(request: HttpRequest, year: int, week: int) -> JsonResponse:
     league = get_league(year=year)
     league_name = getattr(getattr(league, "settings", None), "name", str(league.league_id))
+    
+    # Preload NFL logos for player data
+    from .services.logo_service import preload_nfl_team_logos
+    nfl_logos = preload_nfl_team_logos()
+    
     scoreboard = get_scoreboard(league, week)
     standings = get_standings_with_movement(league, week)
     incentives = compute_incentives(scoreboard)
-    top_players = get_top_players(league, week, top_n=3)
+    top_players = get_top_players(league, week, top_n=3, nfl_logos=nfl_logos)
     previous = get_previous_standings(league, week)
     inputs = build_prompt_inputs(league_name, week, scoreboard, standings, incentives, top_players, previous)
     cache_key = salted_hmac("overview", f"{league_name}:{year}:{week}").hexdigest()
@@ -237,10 +252,15 @@ def weekly_report_overview_api(request: HttpRequest, year: int, week: int) -> Js
 def weekly_report_storylines_api(request: HttpRequest, year: int, week: int) -> JsonResponse:
     league = get_league(year=year)
     league_name = getattr(getattr(league, "settings", None), "name", str(league.league_id))
+    
+    # Preload NFL logos for player data
+    from .services.logo_service import preload_nfl_team_logos
+    nfl_logos = preload_nfl_team_logos()
+    
     scoreboard = get_scoreboard(league, week)
     standings = get_standings_with_movement(league, week)
     incentives = compute_incentives(scoreboard)
-    top_players = get_top_players(league, week, top_n=3)
+    top_players = get_top_players(league, week, top_n=3, nfl_logos=nfl_logos)
     previous = get_previous_standings(league, week)
     inputs = build_prompt_inputs(league_name, week, scoreboard, standings, incentives, top_players, previous)
     cache_key = salted_hmac("storylines", f"{league_name}:{year}:{week}").hexdigest()
@@ -258,10 +278,15 @@ def weekly_report_storylines_api(request: HttpRequest, year: int, week: int) -> 
 def weekly_report_highlights_api(request: HttpRequest, year: int, week: int) -> JsonResponse:
     league = get_league(year=year)
     league_name = getattr(getattr(league, "settings", None), "name", str(league.league_id))
+    
+    # Preload NFL logos for player data
+    from .services.logo_service import preload_nfl_team_logos
+    nfl_logos = preload_nfl_team_logos()
+    
     scoreboard = get_scoreboard(league, week)
     standings = get_standings_with_movement(league, week)
     incentives = compute_incentives(scoreboard)
-    top_players = get_top_players(league, week, top_n=3)
+    top_players = get_top_players(league, week, top_n=3, nfl_logos=nfl_logos)
     previous = get_previous_standings(league, week)
     inputs = build_prompt_inputs(league_name, week, scoreboard, standings, incentives, top_players, previous)
     cache_key = salted_hmac("highlights", f"{league_name}:{year}:{week}").hexdigest()
@@ -284,10 +309,18 @@ def draft_analysis(request):
         league = get_league()
         draft_data = get_draft_analysis(league)
         
+        # Preload all team logos for better performance
+        from .services.logo_service import bulk_preload_logos_for_context, preload_nfl_team_logos
+        teams = getattr(league, "teams", []) or []
+        team_logos = bulk_preload_logos_for_context(teams)
+        nfl_logos = preload_nfl_team_logos()
+        
         context = {
             'league_name': getattr(getattr(league, "settings", None), "name", str(league.league_id)),
             'league_year': getattr(league, "year", "Unknown"),
             'draft_data': draft_data,
+            'team_logos': team_logos,  # Add cached logos to context
+            'nfl_logos': nfl_logos,  # Add cached NFL logos to context
         }
         
         return render(request, 'roundup/draft_analysis_simple.html', context)

@@ -1,4 +1,5 @@
 {% load static %}
+{% load dict_extras %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -82,7 +83,9 @@
                                     {% endif %}
                                 </div>
                                 <div class="team-logo-small">
-                                    {% if pick.team_id %}
+                                    {% if pick.team_id and team_logos|get_item:pick.team_id %}
+                                        <img src="{{ team_logos|get_item:pick.team_id }}" alt="{{ pick.team_name }} logo" class="team-logo-img">
+                                    {% elif pick.team_id %}
                                         <img src="{% url 'team_logo' team_id=pick.team_id %}" alt="{{ pick.team_name }} logo" class="team-logo-img">
                                     {% endif %}
                                 </div>

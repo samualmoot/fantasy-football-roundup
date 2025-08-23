@@ -241,7 +241,7 @@ def get_standings_with_movement(league: League, week: int) -> List[Dict[str, Any
     return current
 
 
-def get_top_players(league: League, week: int, top_n: int = 3) -> List[Dict[str, Any]]:
+def get_top_players(league: League, week: int, top_n: int = 3, nfl_logos: Dict[str, str] = None) -> List[Dict[str, Any]]:
     """Return top-N NFL player fantasy scorers for the given week across all teams.
     Bench/IR players are ignored when detectable via slot_position.
     """
@@ -261,12 +261,19 @@ def get_top_players(league: League, week: int, top_n: int = 3) -> List[Dict[str,
             name = getattr(pl, "name", getattr(pl, "playerName", "Player"))
             position = getattr(pl, "position", None)
             nfl_team = getattr(pl, "proTeam", getattr(pl, "proTeamAbbreviation", None))
+            
+            # Get NFL logo from cache if available
+            nfl_logo = None
+            if nfl_logos and nfl_team:
+                nfl_logo = nfl_logos.get(nfl_team)
+            
             players.append({
                 "player_name": name,
                 "position": position,
                 "nfl_team": nfl_team,
                 "points": round(points, 1),
                 "fantasy_team": fantasy_team_name,
+                "nfl_logo": nfl_logo,
             })
 
     for b in box_scores:
@@ -281,10 +288,10 @@ def get_top_players(league: League, week: int, top_n: int = 3) -> List[Dict[str,
     return players[:max(0, top_n)]
 
 
-def get_all_player_performances(league: League, week: int) -> List[Dict[str, Any]]:
+def get_all_player_performances(league: League, week: int, nfl_logos: Dict[str, str] = None) -> List[Dict[str, Any]]:
     """Return all player performances for the week with starter/bench flag.
 
-    Each entry: player_name, position, nfl_team, points, fantasy_team, is_bench (bool)
+    Each entry: player_name, position, nfl_team, points, fantasy_team, is_bench (bool), nfl_logo
     """
     players: List[Dict[str, Any]] = []
     box_scores = _get_cached_box_scores(league, week)
@@ -301,6 +308,12 @@ def get_all_player_performances(league: League, week: int) -> List[Dict[str, Any
             name = getattr(pl, "name", getattr(pl, "playerName", "Player"))
             position = getattr(pl, "position", None)
             nfl_team = getattr(pl, "proTeam", getattr(pl, "proTeamAbbreviation", None))
+            
+            # Get NFL logo from cache if available
+            nfl_logo = None
+            if nfl_logos and nfl_team:
+                nfl_logo = nfl_logos.get(nfl_team)
+            
             players.append({
                 "player_name": name,
                 "position": position,
@@ -308,6 +321,7 @@ def get_all_player_performances(league: League, week: int) -> List[Dict[str, Any
                 "points": round(points, 1),
                 "fantasy_team": fantasy_team_name,
                 "is_bench": is_bench,
+                "nfl_logo": nfl_logo,
             })
 
     for b in box_scores:
@@ -375,7 +389,7 @@ def clear_box_score_cache():
     _box_score_cache = {}
 
 
-def get_bottom_players(league: League, week: int, bottom_n: int = 3) -> List[Dict[str, Any]]:
+def get_bottom_players(league: League, week: int, bottom_n: int = 3, nfl_logos: Dict[str, str] = None) -> List[Dict[str, Any]]:
     """Return bottom-N scoring starters for the given week across all teams.
     Bench/IR are excluded when detectable via slot_position. Sorted ascending by points.
     """
@@ -395,12 +409,19 @@ def get_bottom_players(league: League, week: int, bottom_n: int = 3) -> List[Dic
             name = getattr(pl, "name", getattr(pl, "playerName", "Player"))
             position = getattr(pl, "position", None)
             nfl_team = getattr(pl, "proTeam", getattr(pl, "proTeamAbbreviation", None))
+            
+            # Get NFL logo from cache if available
+            nfl_logo = None
+            if nfl_logos and nfl_team:
+                nfl_logo = nfl_logos.get(nfl_team)
+            
             players.append({
                 "player_name": name,
                 "position": position,
                 "nfl_team": nfl_team,
                 "points": round(points, 1),
                 "fantasy_team": fantasy_team_name,
+                "nfl_logo": nfl_logo,
             })
 
     for b in box_scores:

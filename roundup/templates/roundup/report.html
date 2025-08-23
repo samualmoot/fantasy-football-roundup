@@ -1,4 +1,5 @@
 {% load report_extras %}
+{% load dict_extras %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -133,7 +134,11 @@
           <!-- Home Team Logo + Info -->
           <div class="score-team-left">
             {% if m.home_id and m.home_logo %}
-              <img class="score-team-logo" src="{% url 'team_logo' team_id=m.home_id %}" alt="{{ m.home_team }} logo" />
+              {% if team_logos|get_item:m.home_id %}
+                <img class="score-team-logo" src="{{ team_logos|get_item:m.home_id }}" alt="{{ m.home_team }} logo" />
+              {% elif m.home_id %}
+                <img class="score-team-logo" src="{% url 'team_logo' team_id=m.home_id %}" alt="{{ m.home_team }} logo" />
+              {% endif %}
             {% endif %}
             <div class="score-team-details">
               <div class="team-name">{{ m.home_team }}</div>
@@ -162,7 +167,11 @@
               <div class="team-record">{{ m.away_wins }}-{{ m.away_losses }}-{{ m.away_ties }}</div>
             </div>
             {% if m.away_id and m.away_logo %}
-              <img class="score-team-logo" src="{% url 'team_logo' team_id=m.away_id %}" alt="{{ m.away_team }} logo" />
+              {% if team_logos|get_item:m.away_id %}
+                <img class="score-team-logo" src="{{ team_logos|get_item:m.away_id }}" alt="{{ m.away_team }} logo" />
+              {% elif m.away_id %}
+                <img class="score-team-logo" src="{% url 'team_logo' team_id=m.away_id %}" alt="{{ m.away_team }} logo" />
+              {% endif %}
               {% endif %}
           </div>
               </div>
@@ -176,7 +185,11 @@
           <!-- Home Team -->
           <div class="mobile-score-team">
             {% if m.home_id and m.home_logo %}
+              {% if team_logos|get_item:m.home_id %}
+              <img class="mobile-score-team-logo" src="{{ team_logos|get_item:m.home_id }}" alt="{{ m.home_team }} logo" />
+            {% elif m.home_id %}
               <img class="mobile-score-team-logo" src="{% url 'team_logo' team_id=m.home_id %}" alt="{{ m.home_team }} logo" />
+            {% endif %}
             {% endif %}
             <div class="mobile-score-team-details">
               <div class="mobile-team-name">{{ m.home_team }}</div>
@@ -192,7 +205,11 @@
           <!-- Away Team -->
           <div class="mobile-score-team">
             {% if m.away_id and m.away_logo %}
+              {% if team_logos|get_item:m.away_id %}
+              <img class="mobile-score-team-logo" src="{{ team_logos|get_item:m.away_id }}" alt="{{ m.away_team }} logo" />
+            {% elif m.away_id %}
               <img class="mobile-score-team-logo" src="{% url 'team_logo' team_id=m.away_id %}" alt="{{ m.away_team }} logo" />
+            {% endif %}
             {% endif %}
             <div class="mobile-score-team-details">
               <div class="mobile-team-name">{{ m.away_team }}</div>
