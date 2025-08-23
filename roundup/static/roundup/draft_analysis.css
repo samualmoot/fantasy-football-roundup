@@ -370,7 +370,7 @@ body {
 /* ===== RESPONSIVE DESIGN ===== */
 @media (max-width: 768px) {
   .header h1 {
-    font-size: 2rem;
+    font-size: 1.75rem;
   }
   
   .main-content {
@@ -384,5 +384,172 @@ body {
   .round-btn {
     padding: 0.6rem 1.2rem;
     font-size: 0.9rem;
+  }
+  
+  /* Mobile Draft Picks Layout */
+  .draft-header {
+    display: none; /* Hide desktop headers on mobile */
+  }
+  
+  .draft-pick-row {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    padding: 1rem;
+    border-bottom: 1px solid var(--gray-200);
+    background: white;
+    margin-bottom: 0.75rem;
+    border-radius: 8px;
+    box-shadow: var(--shadow-sm);
+  }
+  
+  .draft-pick-row:nth-child(even) {
+    background: white;
+  }
+  
+  .draft-pick-row:hover {
+    background: var(--gray-50);
+  }
+  
+  /* Mobile Pick Number */
+  .pick-number {
+    text-align: left;
+    font-size: 0.9rem;
+    color: var(--primary);
+    font-weight: 700;
+    padding: 0.25rem 0.5rem;
+    background: var(--gray-100);
+    border-radius: 4px;
+    display: inline-block;
+    width: fit-content;
+  }
+  
+  /* Mobile Player Info */
+  .player-info {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    width: 100%;
+  }
+  
+  .player-row {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    flex: 1;
+  }
+  
+  .nfl-logo-small {
+    width: 40px;
+    height: 40px;
+    flex-shrink: 0;
+  }
+  
+  .player-details-text {
+    flex: 1;
+    min-width: 0;
+  }
+  
+  .player-name {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--gray-900);
+    margin-bottom: 0.25rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  
+  .player-details {
+    font-size: 0.85rem;
+    color: var(--gray-600);
+  }
+  
+  /* Mobile Fantasy Team Section */
+  .fantasy-team-section {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    justify-content: flex-start;
+    width: 100%;
+    padding-top: 0.5rem;
+    border-top: 1px solid var(--gray-200);
+  }
+  
+  .team-info {
+    text-align: left;
+    flex: 1;
+  }
+  
+  .fantasy-team {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: var(--gray-900);
+    margin-bottom: 0.25rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  
+  .team-owner {
+    font-size: 0.8rem;
+    color: var(--gray-500);
+    font-style: italic;
+  }
+  
+  .team-logo-small {
+    width: 36px;
+    height: 36px;
+    flex-shrink: 0;
+  }
+  
+  /* Mobile Round Selection */
+  .round-selection {
+    padding: 1rem;
+  }
+  
+  .round-selection h2 {
+    font-size: 1.25rem;
+    margin-bottom: 0.75rem;
+  }
+  
+  /* Mobile Simple Draft */
+  .simple-draft {
+    padding: 1rem;
+  }
+  
+  .simple-draft h2 {
+    font-size: 1.25rem;
+    margin-bottom: 0.75rem;
+  }
+  
+  .draft-list {
+    padding: 1rem;
+  }
+}
+
+/* ===== TABLET ADJUSTMENTS ===== */
+@media (min-width: 769px) and (max-width: 1024px) {
+  .draft-pick-row {
+    grid-template-columns: 60px 1fr 180px;
+    gap: 0.75rem;
+  }
+  
+  .draft-header {
+    grid-template-columns: 60px 1fr 180px;
+  }
+  
+  .player-name {
+    font-size: 0.85rem;
+  }
+  
+  .fantasy-team {
+    font-size: 0.85rem;
+  }
+  
+  .nfl-logo-small,
+  .team-logo-small {
+    width: 28px;
+    height: 28px;
   }
 }
