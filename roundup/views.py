@@ -149,16 +149,26 @@ def weekly_report(request: HttpRequest, year: int, week: int) -> HttpResponse:
     )
     
     # Get or fetch scoreboard
-    scoreboard = get_cached_scoreboard(league, week)
-    if scoreboard is None:
+    try:
+        scoreboard = get_cached_scoreboard(league, week)
+        if scoreboard is None:
+            scoreboard = get_scoreboard(league, week)
+            cache_scoreboard(league, week, scoreboard)
+    except Exception as e:
+        # Fallback if caching fails
+        logger.warning(f"Cache failed, falling back to direct fetch: {e}")
         scoreboard = get_scoreboard(league, week)
-        cache_scoreboard(league, week, scoreboard)
     
     # Get or fetch standings
-    standings = get_cached_standings(league, week)
-    if standings is None:
+    try:
+        standings = get_cached_standings(league, week)
+        if standings is None:
+            standings = get_standings_with_movement(league, week)
+            cache_standings(league, week, standings)
+    except Exception as e:
+        # Fallback if caching fails
+        logger.warning(f"Cache failed, falling back to direct fetch: {e}")
         standings = get_standings_with_movement(league, week)
-        cache_standings(league, week, standings)
     
     # Build mapping from team_id to record to enrich scoreboard display
     id_to_record = _build_team_id_to_record(standings)

@@ -22,15 +22,22 @@ INCENTIVES_CACHE_TIMEOUT = 1800  # 30 minutes
 
 def get_cached_scoreboard(league: League, week: int) -> Optional[List[Dict[str, Any]]]:
     """Get cached scoreboard data or return None if not cached."""
-    cache_key = f"scoreboard_{league.league_id}_{league.year}_{week}"
-    return cache.get(cache_key)
+    try:
+        cache_key = f"scoreboard_{league.league_id}_{league.year}_{week}"
+        return cache.get(cache_key)
+    except Exception as e:
+        logger.warning(f"Cache error getting scoreboard: {e}")
+        return None
 
 
 def cache_scoreboard(league: League, week: int, scoreboard_data: List[Dict[str, Any]]) -> None:
     """Cache scoreboard data."""
-    cache_key = f"scoreboard_{league.league_id}_{league.year}_{week}"
-    cache.set(cache_key, scoreboard_data, SCOREBOARD_CACHE_TIMEOUT)
-    logger.info(f"Cached scoreboard for league {league.league_id}, year {league.year}, week {week}")
+    try:
+        cache_key = f"scoreboard_{league.league_id}_{league.year}_{week}"
+        cache.set(cache_key, scoreboard_data, SCOREBOARD_CACHE_TIMEOUT)
+        logger.info(f"Cached scoreboard for league {league.league_id}, year {league.year}, week {week}")
+    except Exception as e:
+        logger.warning(f"Cache error setting scoreboard: {e}")
 
 
 def get_cached_standings(league: League, week: int) -> Optional[List[Dict[str, Any]]]:
