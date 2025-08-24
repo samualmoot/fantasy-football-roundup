@@ -17,6 +17,7 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path
 from roundup.views import (
+    homepage,
     weekly_report,
     weekly_report_narrative_api,
     weekly_report_overview_api,
@@ -26,6 +27,7 @@ from roundup.views import (
     weekly_report_awards_api,
     weekly_report_export_pdf,
     team_logo,
+    draft_analysis,
 )
 
 urlpatterns = [
@@ -42,11 +44,9 @@ urlpatterns = [
     # Export PDF
     path('report/<int:year>/<int:week>/export.pdf', weekly_report_export_pdf, name='weekly_report_export_pdf'),
 
-    # New homepage: Week 1 report
-    path('', lambda request: weekly_report(request, year=2025, week=1), name='homepage'),
-
-    # Disable draft analysis: route to week 1 report
-    path('draft/', lambda request: weekly_report(request, year=2025, week=1), name='draft_analysis'),
+    # Restore homepage and draft analysis
+    path('', homepage, name='homepage'),
+    path('draft/', draft_analysis, name='draft_analysis'),
 
     path('assets/team-logo/<int:team_id>.png', team_logo, name='team_logo'),
 ]
