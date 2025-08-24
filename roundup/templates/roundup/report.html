@@ -8,7 +8,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <title>{{ league_name }} – Week {{ week }} Roundup</title>
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏈</text></svg>">
-  <link rel="stylesheet" href="{% static 'roundup/report.css' %}">
+  <link rel="stylesheet" href="{% static 'roundup/report.css' %}" media="screen">
+  <link rel="stylesheet" href="{% static 'roundup/report-print.css' %}" media="print">
 </head>
 <body>
   <div class="grid">
@@ -18,6 +19,7 @@
       </div>
       <div class="nav">
         <a class="btn" href="{% url 'homepage' %}">🏠 Home</a>
+        <a class="btn" href="{% url 'weekly_report_export_pdf' year=year week=week %}" target="_blank" rel="noopener">⬇ Export PDF</a>
         {% if prev_disabled %}
           <span class="btn disabled">◀ Previous</span>
         {% else %}
@@ -61,6 +63,19 @@
 
     <!-- Right: Player Highlights and Weekly Incentive (top row) -->
     <div class="overview-row">
+      <section class="card incentive-card">
+        <h2>🏆 Weekly Incentive</h2>
+        <div id="incentive-container">
+          <!-- Loading state -->
+          <div class="loading-state" id="incentive-loading">
+            <div class="loading-spinner"></div>
+            <div class="loading-text">Loading incentive...</div>
+          </div>
+          <!-- Content will be loaded here -->
+          <div id="incentive-content" style="display: none;"></div>
+        </div>
+      </section>
+
       <section class="card highlights-card">
         <h2>⭐ Player Highlights</h2>
         <div id="awards-container">
@@ -73,18 +88,11 @@
           <div id="awards-content" style="display: none;"></div>
         </div>
       </section>
-  
-      <section class="card incentive-card">
-        <h2>🏆 Weekly Incentive</h2>
-        <div id="incentive-container">
-          <!-- Loading state -->
-          <div class="loading-state" id="incentive-loading">
-            <div class="loading-spinner"></div>
-            <div class="loading-text">Loading incentive...</div>
-          </div>
-          <!-- Content will be loaded here -->
-          <div id="incentive-content" style="display: none;"></div>
-        </div>
+
+      <!-- Mini Scores for print (hidden on screen) -->
+      <section class="card mini-scores-card" style="display: none;" id="mini-scores-print">
+        <h2>Mini Scores</h2>
+        <div id="mini-scores-content"></div>
       </section>
     </div>
 
@@ -154,6 +162,16 @@
   </div>
 
   <script>
+    // Enable print mode if ?print=1
+    (function() {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get('print') === '1') {
+        document.body.classList.add('print-mode');
+        // Optionally hide the Overview spinner if still present
+        const sp = document.getElementById('overview-spinner');
+        if (sp) sp.style.display = 'none';
+      }
+    })();
     // Function to load overview content
     async function loadOverview() {
       try {
@@ -161,7 +179,7 @@
         const overviewSpinner = document.getElementById('overview-spinner');
         
         if (!overviewElement || !overviewSpinner) {
-          console.error('Overview elements not found');
+          
           return;
         }
         
@@ -177,7 +195,7 @@
           overviewElement.innerHTML = '<span class="error">No overview available.</span>';
         }
       } catch (error) {
-        console.error('Error loading overview:', error);
+        
         const overviewElement = document.getElementById('overview');
         if (overviewElement) {
           overviewElement.innerHTML = '<span class="error">Failed to load overview. Please try again later.</span>';
@@ -192,12 +210,10 @@
     
     // Progressive component loading
     async function loadAllComponents() {
-      console.log('loadAllComponents called');
+      
       const year = {{ year }};
       const week = {{ week }};
-      console.log(`Loading components for year ${year}, week ${week}`);
       
-      // Load all components in parallel
       await Promise.all([
         loadStandings(year, week),
         loadScores(year, week),
@@ -205,12 +221,17 @@
         loadAwards(year, week),
         loadIncentive(year, week)
       ]);
-      console.log('All components loaded');
+      
+      window.__REPORT_COMPONENTS_READY__ = true;
+      // If print mode, give the browser a small time slice to paint
+      if (document.body.classList.contains('print-mode')) {
+        await new Promise(r => setTimeout(r, 300));
+      }
     }
     
     // Load standings data
     async function loadStandings(year, week) {
-      console.log('Loading standings...');
+      
       try {
         const response = await fetch(`/report/${year}/${week}/standings.json`);
         const data = await response.json();
@@ -230,14 +251,14 @@
           document.getElementById('mobile-standings-content').style.display = 'block';
         }
       } catch (error) {
-        console.error('Error loading standings:', error);
+        
         showError('standings-loading', 'Failed to load standings');
       }
     }
     
     // Load scores data
     async function loadScores(year, week) {
-      console.log('Loading scores...');
+      
       try {
         const response = await fetch(`/report/${year}/${week}/scoreboard.json`);
         const data = await response.json();
@@ -251,13 +272,17 @@
           renderScores(data.scoreboard, data.team_logos, 'scores-content', false);
           // Render mobile scores
           renderScores(data.scoreboard, data.team_logos, 'mobile-scores-content', true);
+          // Populate mini scores for print (compact list)
+          renderMiniScores(data.scoreboard, data.team_logos, 'mini-scores-content');
+          const miniHeader = document.querySelector('#mini-scores-print h2');
+          if (miniHeader) miniHeader.textContent = `Week ${week} Scores`;
           
           // Show content
           document.getElementById('scores-content').style.display = 'block';
           document.getElementById('mobile-scores-content').style.display = 'block';
         }
       } catch (error) {
-        console.error('Error loading scores:', error);
+        
         showError('scores-loading', 'Failed to load scores');
       }
     }
@@ -283,7 +308,7 @@
           document.getElementById('mobile-booms-busts-content').style.display = 'block';
         }
       } catch (error) {
-        console.error('Error loading booms and busts:', error);
+        
         showError('booms-busts-loading', 'Failed to load player data');
       }
     }
@@ -305,7 +330,7 @@
           document.getElementById('awards-content').style.display = 'block';
         }
       } catch (error) {
-        console.error('Error loading awards:', error);
+        
         showError('awards-loading', 'Failed to load awards');
       }
     }
@@ -327,7 +352,7 @@
           document.getElementById('incentive-content').style.display = 'block';
         }
       } catch (error) {
-        console.error('Error loading incentive:', error);
+        
         showError('incentive-loading', 'Failed to load incentive');
       }
     }
@@ -365,7 +390,7 @@
              <div class="standing-team-card ${playoffClass} ${cutoffClass}">
                <div class="standing-rank">
                  <div class="rank-number">#${team.rank}</div>
-                 ${team.rank <= playoffTeamCount ? '<div class="playoff-badge">🏆</div>' : ''}
+                 ${team.rank <= playoffTeamCount ? '<div class="playoff-badge print-hide">🏆</div>' : ''}
                </div>
                <div class="standing-team-info">
                  <div class="team-name">${team.team_name}</div>
@@ -547,14 +572,23 @@
      function renderAwards(awards, containerId) {
        const container = document.getElementById(containerId);
        
+       // Always show 3 slots: pad with placeholders if fewer, limit if more
+       const awardsToShow = (awards || []).slice(0, 3);
+       while (awardsToShow.length < 3) {
+         awardsToShow.push({ title: 'Squeaker', text: '—' });
+       }
+
        let html = '<ul class="awards">';
-       awards.forEach(award => {
+       awardsToShow.forEach(award => {
+         const isPlaceholder = !award || award.text === '—';
+         const title = (award && award.title) ? award.title : 'Squeaker';
+         const text = (award && award.text) ? award.text : '—';
          html += `
-           <li class="award">
+           <li class="award${isPlaceholder ? ' placeholder' : ''}">
              <span class="award-icon">⭐</span>
              <div class="award-body">
-               <div class="award-title">${award.title}</div>
-               <div class="award-text">${award.text}</div>
+               <div class="award-title">${title}</div>
+               <div class="award-text">${text}</div>
              </div>
            </li>
          `;
@@ -601,9 +635,50 @@
        `;
      }
      
+     // Render a compact mini scores list for print
+     function renderMiniScores(scoreboard, teamLogos, containerId) {
+       const container = document.getElementById(containerId);
+       if (!container || !Array.isArray(scoreboard)) return;
+       // Show all matchups in the compact list
+       const items = scoreboard;
+       let html = '<ul class="mini-scores-list">';
+       items.forEach(m => {
+         const leftLogo = teamLogos[m.home_id] || '';
+         const rightLogo = teamLogos[m.away_id] || '';
+         const leftTeam = m.home_team || '';
+         const rightTeam = m.away_team || '';
+         const leftOwner = m.home_owner || '';
+         const rightOwner = m.away_owner || '';
+         html += `
+           <li class="mini-score-item">
+             <div class="mini-left">
+               <img class="mini-logo" src="${leftLogo}" alt="${m.home_team} logo" />
+               <div class="mini-details">
+                 <span class="mini-name-primary">${leftTeam}</span>
+                 <span class="mini-owner-secondary">${leftOwner}</span>
+               </div>
+             </div>
+             <div class="mini-center">
+               <span class="mini-score">${(Number(m.home_score ?? 0)).toFixed(1)}</span>
+               <span class="mini-vs">vs</span>
+               <span class="mini-score">${((Number(m.away_score ?? 0))).toFixed(1)}</span>
+             </div>
+             <div class="mini-right">
+               <div class="mini-details mini-details-right">
+                 <span class="mini-name-primary">${rightTeam}</span>
+                 <span class="mini-owner-secondary">${rightOwner}</span>
+               </div>
+               <img class="mini-logo" src="${rightLogo}" alt="${m.away_team} logo" />
+             </div>
+           </li>
+         `;
+       });
+       html += '</ul>';
+       container.innerHTML = html;
+     }
+     
      // Start loading all components after all functions are defined
      document.addEventListener('DOMContentLoaded', function() {
-       console.log('DOM loaded, starting component loading...');
        loadOverview();
        loadAllComponents();
      });

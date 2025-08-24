@@ -1,5 +1,6 @@
 from django.shortcuts import render, redirect
 from django.http import HttpRequest, HttpResponse, JsonResponse, HttpResponseNotFound
+from django.urls import reverse
 from django.utils.crypto import salted_hmac
 import logging
 
@@ -34,6 +35,7 @@ from .ai_client import (
 from .ai_jobs import ensure_job, get_job_result
 import os
 import httpx
+from urllib.parse import urlencode
 
 
 def homepage(request):
@@ -396,7 +398,6 @@ def draft_analysis(request):
         }
         
         return render(request, 'roundup/draft_analysis_simple.html', context)
-        
     except Exception as e:
         logger.error(f"Error loading draft analysis: {e}")
         context = {
@@ -410,3 +411,50 @@ def draft_analysis(request):
             }
         }
         return render(request, 'roundup/draft_analysis_simple.html', context)
+
+
+# === PDF EXPORT ===
+def weekly_report_export_pdf(request: HttpRequest, year: int, week: int) -> HttpResponse:
+    """Render the weekly report in print mode and export as a PDF using Playwright.
+    Loads the same report URL with ?print=1 so CSS can adapt, waits for content,
+    then prints to PDF and streams it back as a download.
+    """
+    try:
+        from playwright.sync_api import sync_playwright
+    except Exception as e:
+        return HttpResponse(f"Playwright not available: {e}", status=500)
+
+    # Build absolute URL to the report page with print mode
+    base_url = request.build_absolute_uri(reverse('weekly_report', kwargs={"year": year, "week": week}))
+    url = f"{base_url}?print=1"
+
+    with sync_playwright() as p:
+        browser = p.chromium.launch()
+        context = browser.new_context()
+        page = context.new_page()
+        # Load and wait for network idle so progressive components finish
+        page.goto(url, wait_until="networkidle")
+        # Ensure print media rules apply (use report-print.css only)
+        try:
+            page.emulate_media(media="print")
+        except Exception:
+            pass
+        # Wait until client sets readiness flag to ensure all components rendered
+        try:
+            page.wait_for_function("() => window.__REPORT_COMPONENTS_READY__ === true", timeout=5000)
+        except Exception:
+            # Fallback small wait
+            page.wait_for_timeout(500)
+        # Use a slight scale-down and tighter margins to fit into two pages
+        pdf_bytes = page.pdf(
+            format="Letter",
+            margin={"top": "0.2in", "right": "0.2in", "bottom": "0.2in", "left": "0.2in"},
+            print_background=True,
+            scale=1.0,
+        )
+        context.close()
+        browser.close()
+
+    response = HttpResponse(pdf_bytes, content_type='application/pdf')
+    response['Content-Disposition'] = f'attachment; filename="weekly-report-{year}-week-{week}.pdf"'
+    return response

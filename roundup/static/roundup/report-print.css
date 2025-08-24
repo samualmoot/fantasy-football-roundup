@@ -1,0 +1,144 @@
+@page { size: Letter; margin: 0.25in; }
+
+@media print {
+  /* Base */
+  html, body { -webkit-print-color-adjust: exact; print-color-adjust: exact; background: #fff !important; color: #111827 !important; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Helvetica Neue", Arial, "Apple Color Emoji", "Segoe UI Emoji", sans-serif; }
+  /* Hide Booms & Busts and mobile-only blocks */
+  header .nav, .bb-card, .mobile-scores, .mobile-standings, .mobile-bb-bottom, .muted-with-margin, .loading-state, .spinner, #overview-spinner { display: none !important; }
+
+  /* Full-page width container with a small inner gutter */
+  .grid { display: block !important; width: 100% !important; max-width: none !important; margin: 0 !important; padding: 0 0.1in !important; box-sizing: border-box !important; }
+
+  /* PAGE 1: Title + Overview + Standings (left) */
+  header { display: block !important; page-break-after: avoid !important; }
+  header h1 { background: linear-gradient(90deg, #4f46e5, #9333ea) !important; color: #fff !important; padding: 10px 14px !important; border-radius: 8px !important; font-weight: 800 !important; font-size: 18px !important; margin: 0 0 10px 0 !important; text-align: center !important; }
+
+  .overview-section { display: block !important; page-break-before: avoid !important; page-break-after: avoid !important; }
+  .overview-section .card { border: 1px solid #e5e7eb !important; border-radius: 8px !important; background: #ffffff !important; padding: 12px !important; }
+  .overview-section p { margin: 0 !important; padding: 6px 8px !important; color: #374151 !important; }
+
+  /* Show right column next to standings and pin to the right */
+  .overview-row { display: inline-flex !important; flex-direction: column !important; vertical-align: top !important; width: 48% !important; float: right !important; padding-bottom: 0.35in !important; }
+  .overview-row > .incentive-card { order: 0 !important; margin-bottom: 14px !important; }
+  .overview-row > .highlights-card { order: 1 !important; }
+  /* Ensure dynamic content is visible in print */
+  #awards-content, #incentive-content { display: block !important; visibility: visible !important; }
+
+  /* Right column cards: incentive on top, highlights below with spacing */
+  .incentive-card, .highlights-card { display: block !important; border: 1px solid #e5e7eb !important; border-radius: 8px !important; background: #ffffff !important; padding: 10px !important; box-sizing: border-box !important; }
+  .incentive-card { background: #fffbeb !important; border-color: #fcd34d !important; order: 0 !important; }
+  .highlights-card { background: #eff6ff !important; border-color: #bfdbfe !important; order: 1 !important; }
+  .incentive-card h2, .highlights-card h2 { font-size: 14px !important; margin: 0 0 6px 0 !important; }
+
+  /* Awards list typography and spacing */
+  #awards-content .awards { list-style: none !important; margin: 0 !important; padding: 0 !important; display: grid !important; gap: 8px !important; }
+  #awards-content .award { display: grid !important; grid-template-columns: 20px 1fr !important; gap: 8px !important; align-items: start !important; padding: 6px 0 !important; border-bottom: 1px solid #e5e7eb !important; }
+  #awards-content .award:last-child { border-bottom: none !important; }
+  #awards-content .award-icon { font-size: 14px !important; line-height: 1 !important; }
+  #awards-content .award-title { font-weight: 700 !important; font-size: 13px !important; color: #111827 !important; margin-bottom: 2px !important; }
+  #awards-content .award-text { font-size: 11px !important; color: #374151 !important; }
+
+  /* Keep headings/text compact inside cards */
+  #awards-content .awards { margin: 0 !important; padding: 0 !important; }
+  #awards-content .award { margin-bottom: 6px !important; }
+  .incentive-label { font-size: 10px !important; color: #6b7280 !important; }
+  .incentive-title { font-size: 12px !important; font-weight: 700 !important; }
+  .incentive-winner, .incentive-next { font-size: 11px !important; }
+
+  /* Show standings on left; keep right column hidden for now */
+  .standings-aside { display: inline-block !important; vertical-align: top !important; width: 48% !important; margin-right: 2% !important; }
+  .overview-row { display: none !important; }
+
+  /* Hide playoff trophy badge in print */
+  .print-hide { display: none !important; }
+
+  /* Increase vertical footprint of standings slightly to push next page title down */
+  .standings-aside { padding-bottom: 0.35in !important; }
+
+  /* Standings: table-like rows instead of cards (print) */
+  .desktop-standings { display: block !important; }
+
+  /* Each team row */
+  .standing-team-card {
+    background: transparent !important;
+    border: none !important;
+    border-bottom: 1px solid #e5e7eb !important;
+    border-radius: 0 !important;
+    padding: 4px 6px !important;
+    display: grid !important;
+    grid-template-columns: 28px 1fr auto !important; /* rank | team info | record */
+    align-items: center !important;
+    gap: 8px !important;
+  }
+  .standing-team-card:last-child { border-bottom: none !important; }
+  /* Playoff background row */
+  .standing-team-card.playoff { background: #ecfdf5 !important; }
+
+  /* Rank cell */
+  .standing-rank { text-align: center !important; }
+  .standing-rank .rank-number { font-size: 11px !important; font-weight: 700 !important; }
+
+  /* Team info cell */
+  .standing-team-info { min-width: 0 !important; }
+  .standing-team-info .team-name { font-size: 12px !important; font-weight: 700 !important; line-height: 1.2 !important; white-space: nowrap !important; overflow: hidden !important; text-overflow: ellipsis !important; }
+  .standing-team-info .team-owner { font-size: 10px !important; color: #6b7280 !important; white-space: nowrap !important; overflow: hidden !important; text-overflow: ellipsis !important; }
+  .movement-indicator { font-size: 10px !important; display: inline-block !important; margin-left: 6px !important; }
+  .movement-indicator.up { color: #16a34a !important; }
+  .movement-indicator.down { color: #dc2626 !important; }
+
+  /* Record cell */
+  .standing-stats { text-align: right !important; }
+  .record-badge { background: transparent !important; color: #111827 !important; border: none !important; padding: 0 !important; font-weight: 700 !important; font-size: 11px !important; }
+
+  /* Weekly Scores (page 2) - keep as previously finalized */
+  .scores-card { background: #ffffff !important; border: none !important; border-radius: 10px !important; padding: 14px !important; box-sizing: border-box !important; }
+  /* Hide full Weekly Scores page in print (mini scores replaces it) */
+  .scores-section { display: none !important; }
+  .scores-section h2 { text-align: center !important; margin: 0 0 12px 0 !important; font-weight: 800 !important; font-size: 16px !important; }
+  .desktop-scores { display: grid !important; gap: 34px !important; width: 100% !important; grid-auto-rows: min-content !important; }
+  .score-matchup-card + .score-matchup-card { margin-top: 34px !important; }
+  .score-matchup-card { background: #ffffff !important; border: none !important; border-bottom: 1px solid #e5e7eb !important; border-radius: 10px !important; display: grid !important; grid-template-columns: minmax(0,1fr) auto minmax(0,1fr) !important; align-items: center !important; gap: 10px !important; padding: 12px !important; box-sizing: border-box !important; width: 100% !important; }
+  .desktop-scores .score-matchup-card:last-child { border-bottom: none !important; }
+  .score-team-left, .score-team-right { display: flex !important; align-items: center !important; gap: 10px !important; min-width: 0 !important; }
+  .score-team-right { justify-self: end !important; justify-content: flex-end !important; text-align: right !important; max-width: 100% !important; }
+  .score-team-right .team-name, .score-team-right .team-owner, .score-team-right .team-record { text-align: right !important; }
+  .score-team-logo { width: 34px !important; height: 34px !important; border-radius: 50% !important; overflow: hidden !important; flex: 0 0 auto !important; }
+  .score-team-logo img { width: 100% !important; height: 100% !important; }
+  .score-team-details { display: flex !important; flex-direction: column !important; min-width: 0 !important; }
+  .team-name { font-weight: 700 !important; font-size: 14px !important; white-space: nowrap !important; overflow: hidden !important; text-overflow: ellipsis !important; }
+  .team-owner { font-size: 11px !important; color: #6b7280 !important; white-space: nowrap !important; overflow: hidden !important; text-overflow: ellipsis !important; }
+  .team-record { font-size: 10px !important; color: #6b7280 !important; }
+  .score-scores-container { display: grid !important; grid-auto-flow: column !important; align-items: center !important; gap: 6px !important; justify-content: center !important; }
+  .score-vs { font-weight: 700 !important; font-size: 12px !important; color: #6b7280 !important; }
+  .score-home, .score-away { font-size: 18px !important; font-weight: 800 !important; min-width: 32px !important; text-align: center !important; }
+
+  /* Mini Scores appears only in print */
+  #mini-scores-print { display: block !important; border: 1px solid #e5e7eb !important; border-radius: 8px !important; background: #ffffff !important; padding: 10px !important; margin-top: 12px !important; }
+  #mini-scores-print h2 { font-size: 14px !important; margin: 0 0 6px 0 !important; text-align: left !important; }
+  .mini-scores-list { list-style: none !important; margin: 0 !important; padding: 0 !important; display: grid !important; gap: 8px !important; }
+  .mini-score-item { display: grid !important; grid-template-columns: minmax(0,1fr) auto minmax(0,1fr) !important; align-items: center !important; gap: 6px !important; }
+  .mini-left, .mini-right { display: inline-flex !important; align-items: center !important; gap: 6px !important; min-width: 0 !important; }
+  .mini-left { justify-self: start !important; }
+  .mini-right { justify-self: end !important; }
+  .mini-logo { width: 16px !important; height: 16px !important; border-radius: 50% !important; }
+  .mini-details { display: flex !important; flex-direction: column !important; min-width: 0 !important; }
+  .mini-details-right { align-items: flex-end !important; text-align: right !important; }
+  .mini-name-primary { font-size: 12px !important; font-weight: 700 !important; white-space: normal !important; word-break: break-word !important; overflow: visible !important; text-overflow: clip !important; line-height: 1.2 !important; }
+  .mini-owner-secondary { font-size: 10px !important; color: #6b7280 !important; white-space: normal !important; word-break: break-word !important; overflow: visible !important; text-overflow: clip !important; }
+  .mini-center { display: inline-grid !important; grid-auto-flow: column !important; align-items: center !important; gap: 4px !important; justify-content: center !important; }
+  .mini-score { font-size: 12px !important; font-weight: 800 !important; }
+  .mini-vs { font-size: 11px !important; color: #6b7280 !important; }
+
+  /* Standings left, right column visible and side-by-side */
+  .standings-aside { display: inline-block !important; vertical-align: top !important; width: 42% !important; margin-right: 2% !important; float: left !important; }
+  .overview-row { display: inline-block !important; vertical-align: top !important; width: 56% !important; float: right !important; }
+
+  /* Make sure right column content is printed even if default inline style was hidden */
+  #awards-content, #incentive-content { display: block !important; visibility: visible !important; }
+  #awards-loading, #incentive-loading { display: none !important; }
+
+  /* Placeholder award row (muted) */
+  #awards-content .award.placeholder .award-title { color: #9ca3af !important; font-style: italic !important; }
+  #awards-content .award.placeholder .award-text { color: #cbd5e1 !important; }
+}
+  

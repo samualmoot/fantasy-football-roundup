@@ -24,6 +24,7 @@ from roundup.views import (
     weekly_report_standings_api,
     weekly_report_booms_busts_api,
     weekly_report_awards_api,
+    weekly_report_export_pdf,
     team_logo,
 )
 
@@ -37,6 +38,9 @@ urlpatterns = [
     path('report/<int:year>/<int:week>/standings.json', weekly_report_standings_api, name='weekly_report_standings_api'),
     path('report/<int:year>/<int:week>/booms-busts.json', weekly_report_booms_busts_api, name='weekly_report_booms_busts_api'),
     path('report/<int:year>/<int:week>/awards.json', weekly_report_awards_api, name='weekly_report_awards_api'),
+
+    # Export PDF
+    path('report/<int:year>/<int:week>/export.pdf', weekly_report_export_pdf, name='weekly_report_export_pdf'),
 
     # New homepage: Week 1 report
     path('', lambda request: weekly_report(request, year=2025, week=1), name='homepage'),
