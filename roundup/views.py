@@ -120,17 +120,18 @@ def team_logo(request: HttpRequest, team_id: int) -> HttpResponse:
         return HttpResponseNotFound()
 
 def weekly_report(request: HttpRequest, year: int, week: int) -> HttpResponse:
+    """Render the weekly report page with minimal data for instant loading."""
     league = get_league(year=year)
     league_name = getattr(getattr(league, "settings", None), "name", str(league.league_id))
     playoff_team_count = get_playoff_team_count(league)
 
-    # Preload all team logos for better performance (do this early)
+    # Preload team logos (this is fast and needed for immediate display)
     from .services.logo_service import bulk_preload_logos_for_context, preload_nfl_team_logos
     teams = getattr(league, "teams", []) or []
     team_logos = bulk_preload_logos_for_context(teams)
     nfl_logos = preload_nfl_team_logos()
 
-    # Boundaries for navigation
+    # Determine navigation boundaries (this is fast)
     first_week = getattr(league, "firstScoringPeriod", 1) or 1
     last_week = getattr(league, "finalScoringPeriod", 18) or 18
     prev_week = max(first_week, week - 1)
@@ -138,98 +139,8 @@ def weekly_report(request: HttpRequest, year: int, week: int) -> HttpResponse:
     prev_disabled = week <= first_week
     next_disabled = week >= last_week
 
-    # Try to get cached data first
-    from .services.performance_cache import (
-        get_cached_scoreboard, cache_scoreboard,
-        get_cached_standings, cache_standings,
-        get_cached_incentives, cache_incentives,
-        get_cached_player_performances, cache_player_performances,
-        get_cached_position_leaders, cache_position_leaders,
-        get_cached_weekly_awards, cache_weekly_awards
-    )
-    
-    # Get or fetch scoreboard
-    try:
-        scoreboard = get_cached_scoreboard(league, week)
-        if scoreboard is None:
-            scoreboard = get_scoreboard(league, week)
-            cache_scoreboard(league, week, scoreboard)
-    except Exception as e:
-        # Fallback if caching fails
-        logger.warning(f"Cache failed, falling back to direct fetch: {e}")
-        scoreboard = get_scoreboard(league, week)
-    
-    # Get or fetch standings
-    try:
-        standings = get_cached_standings(league, week)
-        if standings is None:
-            standings = get_standings_with_movement(league, week)
-            cache_standings(league, week, standings)
-    except Exception as e:
-        # Fallback if caching fails
-        logger.warning(f"Cache failed, falling back to direct fetch: {e}")
-        standings = get_standings_with_movement(league, week)
-    
-    # Build mapping from team_id to record to enrich scoreboard display
-    id_to_record = _build_team_id_to_record(standings)
-    for m in scoreboard:
-        hid = m.get("home_id")
-        aid = m.get("away_id")
-        m["home_record"] = id_to_record.get(hid) if hid is not None else None
-        m["away_record"] = id_to_record.get(aid) if aid is not None else None
-    
-    # Get or fetch incentives
-    incentives = get_cached_incentives(league, week)
-    if incentives is None:
-        incentives = compute_incentives(scoreboard)
-        incentives["top_players"] = get_top_players(league, week, top_n=3, nfl_logos=nfl_logos)
-        incentives["bottom_players"] = get_bottom_players(league, week, bottom_n=3, nfl_logos=nfl_logos)
-        cache_incentives(league, week, incentives)
-    else:
-        # Still need to add player data with NFL logos
-        incentives["top_players"] = get_top_players(league, week, top_n=3, nfl_logos=nfl_logos)
-        incentives["bottom_players"] = get_bottom_players(league, week, bottom_n=3, nfl_logos=nfl_logos)
-    
-    # Get or fetch player performances
-    all_performances = get_cached_player_performances(league, week)
-    if all_performances is None:
-        all_performances = get_all_player_performances(league, week, nfl_logos)
-        cache_player_performances(league, week, all_performances)
-    
-    # Get or compute boom/bust by position
-    if "boom_bust_by_position" not in incentives:
-        incentives["boom_bust_by_position"] = compute_boom_bust_by_position(all_performances)
-
-    # Determine regular season length and compute weekly incentive schedule
-    # ESPN settings commonly expose finalScoringPeriod as last week index
-    first_week = getattr(league, "firstScoringPeriod", 1) or 1
-    last_week = getattr(league, "finalScoringPeriod", 18) or 18
-    regular_season_weeks = max(1, last_week - first_week + 1)
-    schedule = generate_weekly_incentive_schedule(regular_season_weeks)
-    # Calculate index relative to first week
-    idx = min(max(0, week - first_week), len(schedule) - 1)
-    this_incentive_key = schedule[idx]
-    next_incentive_key = schedule[idx + 1] if idx + 1 < len(schedule) else schedule[0]
-
-    # Compute the winner depending on the incentive type
-    performances = all_performances
-    incentive_result = compute_incentive_winner(
-        this_incentive_key,
-        scoreboard=scoreboard,
-        incentives_summary=incentives,
-        performances=performances,
-    )
-    # Get or compute position leaders
-    position_leaders = get_cached_position_leaders(league, week)
-    if position_leaders is None:
-        position_leaders = compute_position_leaders(performances, top_n=1, bottom_n=1)
-        cache_position_leaders(league, week, position_leaders)
-
-
-
-    # Do NOT block on AI here; page should render immediately.
-    # The narrative will be fetched asynchronously via a JSON endpoint.
-    narrative = {}
+    # Return minimal context for instant page render
+    # All heavy data will be loaded via AJAX
     context = {
         "league_name": league_name,
         "year": year,
@@ -239,28 +150,23 @@ def weekly_report(request: HttpRequest, year: int, week: int) -> HttpResponse:
         "next_week": next_week,
         "prev_disabled": prev_disabled,
         "next_disabled": next_disabled,
-        "scoreboard": scoreboard,
-        "standings": standings,
-        "incentives": incentives,
-        "position_leaders": position_leaders,
+        "team_logos": team_logos,
+        "nfl_logos": nfl_logos,
+        # Empty placeholders for components that will load via AJAX
+        "scoreboard": [],
+        "standings": [],
+        "incentives": {},
+        "position_leaders": {},
         "positions": ["QB", "RB", "WR", "TE", "K", "DEF"],
         "weekly_incentive": {
-            "this_title": describe_incentive_title(this_incentive_key),
-            "winner_text": incentive_result.get("winner_text", ""),
-            "next_title": describe_incentive_title(next_incentive_key),
+            "this_title": "",
+            "winner_text": "",
+            "next_title": "",
         },
-        "narrative": narrative,
-        "team_logos": team_logos,  # Add cached logos to context
-        "nfl_logos": nfl_logos,  # Add cached NFL logos to context
+        "narrative": {},
+        "awards": [],
     }
     
-    # Get or compute weekly awards
-    weekly_awards = get_cached_weekly_awards(league, week)
-    if weekly_awards is None:
-        weekly_awards = compute_weekly_awards(scoreboard, standings, all_performances)
-        cache_weekly_awards(league, week, weekly_awards)
-    
-    context["awards"] = weekly_awards
     return render(request, "roundup/report.html", context)
 
 
@@ -354,6 +260,117 @@ def weekly_report_highlights_api(request: HttpRequest, year: int, week: int) -> 
         return JsonResponse({"status": "pending"}, status=202)
     result = get_job_result(cache_key)
     return JsonResponse(result or {"matchup_highlights": ""})
+
+
+# Component API endpoints for progressive loading
+def weekly_report_scoreboard_api(request: HttpRequest, year: int, week: int) -> JsonResponse:
+    """Return scoreboard data for progressive loading."""
+    try:
+        league = get_league(year=year)
+        
+        # Preload team logos
+        from .services.logo_service import bulk_preload_logos_for_context
+        teams = getattr(league, "teams", []) or []
+        team_logos = bulk_preload_logos_for_context(teams)
+        
+        # Get scoreboard data
+        scoreboard = get_scoreboard(league, week)
+        standings = get_standings_with_movement(league, week)
+        
+        # Build mapping from team_id to record to enrich scoreboard display
+        id_to_record = _build_team_id_to_record(standings)
+        for m in scoreboard:
+            hid = m.get("home_id")
+            aid = m.get("away_id")
+            m["home_record"] = id_to_record.get(hid) if hid is not None else None
+            m["away_record"] = id_to_record.get(aid) if aid is not None else None
+        
+        return JsonResponse({
+            "scoreboard": scoreboard,
+            "team_logos": team_logos
+        })
+    except Exception as e:
+        logger.error(f"Error loading scoreboard: {e}")
+        return JsonResponse({"error": str(e)}, status=500)
+
+
+def weekly_report_standings_api(request: HttpRequest, year: int, week: int) -> JsonResponse:
+    """Return standings data for progressive loading."""
+    try:
+        league = get_league(year=year)
+        standings = get_standings_with_movement(league, week)
+        return JsonResponse({"standings": standings})
+    except Exception as e:
+        logger.error(f"Error loading standings: {e}")
+        return JsonResponse({"error": str(e)}, status=500)
+
+
+def weekly_report_booms_busts_api(request: HttpRequest, year: int, week: int) -> JsonResponse:
+    """Return booms and busts data for progressive loading."""
+    try:
+        league = get_league(year=year)
+        
+        # Preload NFL logos
+        from .services.logo_service import preload_nfl_team_logos
+        nfl_logos = preload_nfl_team_logos()
+        
+        # Get player performances and compute booms/busts
+        logger.info(f"Loading player performances for week {week}")
+        all_performances = get_all_player_performances(league, week, nfl_logos)
+        logger.info(f"Got {len(all_performances)} player performances")
+        
+        # Get top and bottom players
+        logger.info("Getting top and bottom players")
+        top_players = get_top_players(league, week, top_n=3, nfl_logos=nfl_logos)
+        bottom_players = get_bottom_players(league, week, bottom_n=3, nfl_logos=nfl_logos)
+        logger.info(f"Got {len(top_players)} top players and {len(bottom_players)} bottom players")
+        
+        # Compute boom/bust by position
+        logger.info("Computing boom/bust by position")
+        # Compute using D/ST to capture all defense codes, then normalize label to DEF for the frontend
+        positions = ["QB", "RB", "WR", "TE", "K", "D/ST"]
+        boom_bust = compute_boom_bust_by_position(all_performances, positions=positions)
+        for row in boom_bust:
+            pos = str(row.get("position") or "").upper()
+            if pos in {"D/ST", "DST", "DEF"}:
+                row["position"] = "DEF"
+        logger.info(f"Computed boom/bust for {len(boom_bust)} positions")
+        
+        # Create a minimal incentives structure without calling compute_incentives
+        incentives = {
+            "top_players": top_players,
+            "bottom_players": bottom_players,
+            "boom_bust_by_position": boom_bust
+        }
+        
+        return JsonResponse({
+            "incentives": incentives,
+            "nfl_logos": nfl_logos
+        })
+    except Exception as e:
+        logger.error(f"Error loading booms and busts: {e}")
+        import traceback
+        logger.error(f"Traceback: {traceback.format_exc()}")
+        return JsonResponse({"error": str(e)}, status=500)
+
+
+def weekly_report_awards_api(request: HttpRequest, year: int, week: int) -> JsonResponse:
+    """Return weekly awards data for progressive loading."""
+    try:
+        league = get_league(year=year)
+        
+        # Get required data
+        scoreboard = get_scoreboard(league, week)
+        standings = get_standings_with_movement(league, week)
+        all_performances = get_all_player_performances(league, week)
+        
+        # Compute awards
+        awards = compute_weekly_awards(scoreboard, standings, all_performances)
+        
+        return JsonResponse({"awards": awards})
+    except Exception as e:
+        logger.error(f"Error loading awards: {e}")
+        return JsonResponse({"error": str(e)}, status=500)
 
 
 def draft_analysis(request):

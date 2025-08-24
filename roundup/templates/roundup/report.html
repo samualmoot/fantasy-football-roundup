@@ -44,32 +44,14 @@
       <h2>Standings</h2>
       
       <!-- Desktop Standings - Card Layout -->
-      <div class="desktop-standings">
-        {% for t in standings %}
-        <div class="standing-team-card {% if t.rank <= playoff_team_count %}playoff{% endif %} {% if t.rank == playoff_team_count %}cutoff{% endif %}">
-          <div class="standing-rank">
-            <div class="rank-number">#{{ t.rank }}</div>
-            {% if t.rank <= playoff_team_count %}
-              <div class="playoff-badge">🏆</div>
-            {% endif %}
-          </div>
-          
-          <div class="standing-team-info">
-            <div class="team-name">{{ t.team_name }}</div>
-            {% if t.owner_name %}<div class="team-owner">{{ t.owner_name }}</div>{% endif %}
-            {% if t.movement_abs %}
-              <div class="movement-indicator {% if t.movement_is_up %}up{% else %}down{% endif %}">
-                {% if t.movement_is_up %}▲{% else %}▼{% endif %} {{ t.movement_abs }}
-              </div>
-            {% endif %}
-          </div>
-          
-          <div class="standing-stats">
-            <div class="record-badge">{{ t.wins }}-{{ t.losses }}-{{ t.ties }}</div>
-            <div class="points-display">{{ t.points_for }}</div>
+      <div class="desktop-standings" id="standings-container">
+        <!-- Loading state -->
+        <div class="loading-state" id="standings-loading">
+          <div class="loading-spinner"></div>
+          <div class="loading-text">Loading standings...</div>
         </div>
-        </div>
-        {% endfor %}
+        <!-- Content will be loaded here -->
+        <div id="standings-content" style="display: none;"></div>
       </div>
       
       <div class="muted-with-margin">Top {{ playoff_team_count }} highlighted as current playoff positions.</div>
@@ -81,44 +63,27 @@
     <div class="overview-row">
       <section class="card highlights-card">
         <h2>⭐ Player Highlights</h2>
-        <ul class="awards">
-          {% for a in awards %}
-            <li class="award">
-              <span class="award-icon">⭐</span>
-              <div class="award-body">
-                <div class="award-title">{{ a.title }}</div>
-                <div class="award-text">{{ a.text }}</div>
-              </div>
-            </li>
-          {% empty %}
-            <li class="muted">No highlights available.</li>
-          {% endfor %}
-        </ul>
+        <div id="awards-container">
+          <!-- Loading state -->
+          <div class="loading-state" id="awards-loading">
+            <div class="loading-spinner"></div>
+            <div class="loading-text">Loading awards...</div>
+          </div>
+          <!-- Content will be loaded here -->
+          <div id="awards-content" style="display: none;"></div>
+        </div>
       </section>
   
       <section class="card incentive-card">
         <h2>🏆 Weekly Incentive</h2>
-        <div class="incentive-content">
-          <div class="incentive-section">
-            <div class="incentive-label">This Week's Challenge</div>
-            <div class="incentive-title">{{ weekly_incentive.this_title }}</div>
+        <div id="incentive-container">
+          <!-- Loading state -->
+          <div class="loading-state" id="incentive-loading">
+            <div class="loading-spinner"></div>
+            <div class="loading-text">Loading incentive...</div>
           </div>
-          
-          <div class="incentive-section">
-            <div class="incentive-label">🏅 Winner</div>
-            <div class="incentive-winner">
-              {% if weekly_incentive.winner_text %}
-                <span class="winner-text">{{ weekly_incentive.winner_text }}</span>
-              {% else %}
-                <span class="pending-text">TBD - Check back after the games!</span>
-              {% endif %}
-            </div>
-          </div>
-          
-          <div class="incentive-section">
-            <div class="incentive-label">🎯 Next Week's Challenge</div>
-            <div class="incentive-next">{{ weekly_incentive.next_title }}</div>
-          </div>
+          <!-- Content will be loaded here -->
+          <div id="incentive-content" style="display: none;"></div>
         </div>
       </section>
     </div>
@@ -128,285 +93,520 @@
       <h2>Weekly Scores</h2>
       
       <!-- Desktop Scores - Card Layout (Horizontal Flow) -->
-      <div class="desktop-scores">
-        {% for m in scoreboard %}
-        <div class="score-matchup-card">
-          <!-- Home Team Logo + Info -->
-          <div class="score-team-left">
-            {% if m.home_id and m.home_logo %}
-              {% if team_logos|get_item:m.home_id %}
-                <img class="score-team-logo" src="{{ team_logos|get_item:m.home_id }}" alt="{{ m.home_team }} logo" />
-              {% elif m.home_id %}
-                <img class="score-team-logo" src="{% url 'team_logo' team_id=m.home_id %}" alt="{{ m.home_team }} logo" />
-              {% endif %}
-            {% endif %}
-            <div class="score-team-details">
-              <div class="team-name">{{ m.home_team }}</div>
-              {% if m.home_owner %}<div class="team-owner">{{ m.home_owner }}</div>{% endif %}
-              <div class="team-record">{{ m.home_wins }}-{{ m.home_losses }}-{{ m.home_ties }}</div>
-            </div>
-          </div>
-          
-          <!-- Scores and VS Container (Centered) -->
-          <div class="score-scores-container">
-            <!-- Home Team Score -->
-            <div class="score-home">{{ m.home_score }}</div>
-            
-            <!-- VS Separator -->
-            <div class="score-vs">vs</div>
-            
-            <!-- Away Team Score -->
-            <div class="score-away">{{ m.away_score }}</div>
-          </div>
-          
-          <!-- Away Team Logo + Info -->
-          <div class="score-team-right">
-            <div class="score-team-details">
-              <div class="team-name">{{ m.away_team }}</div>
-              {% if m.away_owner %}<div class="team-owner">{{ m.away_owner }}</div>{% endif %}
-              <div class="team-record">{{ m.away_wins }}-{{ m.away_losses }}-{{ m.away_ties }}</div>
-            </div>
-            {% if m.away_id and m.away_logo %}
-              {% if team_logos|get_item:m.away_id %}
-                <img class="score-team-logo" src="{{ team_logos|get_item:m.away_id }}" alt="{{ m.away_team }} logo" />
-              {% elif m.away_id %}
-                <img class="score-team-logo" src="{% url 'team_logo' team_id=m.away_id %}" alt="{{ m.away_team }} logo" />
-              {% endif %}
-              {% endif %}
-          </div>
-              </div>
-          {% endfor %}
+      <div class="desktop-scores" id="scores-container">
+        <!-- Loading state -->
+        <div class="loading-state" id="scores-loading">
+          <div class="loading-spinner"></div>
+          <div class="loading-text">Loading scores...</div>
+        </div>
+        <!-- Content will be loaded here -->
+        <div id="scores-content" style="display: none;"></div>
       </div>
       
       <!-- Mobile Scores - Simplified Layout -->
-      <div class="mobile-scores">
-        {% for m in scoreboard %}
-        <div class="mobile-score-card">
-          <!-- Home Team -->
-          <div class="mobile-score-team">
-            {% if m.home_id and m.home_logo %}
-              {% if team_logos|get_item:m.home_id %}
-              <img class="mobile-score-team-logo" src="{{ team_logos|get_item:m.home_id }}" alt="{{ m.home_team }} logo" />
-            {% elif m.home_id %}
-              <img class="mobile-score-team-logo" src="{% url 'team_logo' team_id=m.home_id %}" alt="{{ m.home_team }} logo" />
-            {% endif %}
-            {% endif %}
-            <div class="mobile-score-team-details">
-              <div class="mobile-team-name">{{ m.home_team }}</div>
-              {% if m.home_owner %}<div class="mobile-team-owner">{{ m.home_owner }}</div>{% endif %}
-              <div class="mobile-team-record">{{ m.home_wins }}-{{ m.home_losses }}-{{ m.home_ties }}</div>
-            </div>
-            <div class="mobile-score-home">{{ m.home_score }}</div>
-          </div>
-          
-          <!-- VS -->
-          <div class="mobile-score-vs">vs</div>
-          
-          <!-- Away Team -->
-          <div class="mobile-score-team">
-            {% if m.away_id and m.away_logo %}
-              {% if team_logos|get_item:m.away_id %}
-              <img class="mobile-score-team-logo" src="{{ team_logos|get_item:m.away_id }}" alt="{{ m.away_team }} logo" />
-            {% elif m.away_id %}
-              <img class="mobile-score-team-logo" src="{% url 'team_logo' team_id=m.away_id %}" alt="{{ m.away_team }} logo" />
-            {% endif %}
-            {% endif %}
-            <div class="mobile-score-team-details">
-              <div class="mobile-team-name">{{ m.away_team }}</div>
-              {% if m.away_owner %}<div class="mobile-team-owner">{{ m.away_owner }}</div>{% endif %}
-              <div class="mobile-team-record">{{ m.away_wins }}-{{ m.away_losses }}-{{ m.away_ties }}</div>
-            </div>
-            <div class="mobile-score-away">{{ m.away_score }}</div>
-          </div>
+      <div class="mobile-scores" id="mobile-scores-container">
+        <!-- Loading state -->
+        <div class="loading-state" id="mobile-scores-loading">
+          <div class="loading-spinner"></div>
+          <div class="loading-text">Loading scores...</div>
         </div>
-        {% endfor %}
+        <!-- Content will be loaded here -->
+        <div id="mobile-scores-content" style="display: none;"></div>
       </div>
     </section>
 
     <!-- Mobile Standings Layout - Positioned below weekly scores -->
-    <div class="mobile-standings">
-          {% for t in standings %}
-      <div class="mobile-standing-item {% if t.rank <= playoff_team_count %}playoff{% endif %} {% if t.rank == playoff_team_count %}cutoff{% endif %}">
-        <div class="mobile-standing-rank">#{{ t.rank }}</div>
-        <div class="mobile-standing-team">
-          <div class="mobile-team-name">{{ t.team_name }}</div>
-          {% if t.owner_name %}<div class="mobile-team-owner">{{ t.owner_name }}</div>{% endif %}
-              {% if t.movement_abs %}
-                {% if t.movement_is_up %}
-                  <span class="move up">▲ {{ t.movement_abs }}</span>
-                {% else %}
-                  <span class="move down">▼ {{ t.movement_abs }}</span>
-                {% endif %}
-              {% endif %}
-        </div>
-        <div class="mobile-standing-stats">
-          <div class="mobile-standing-record">{{ t.wins }}-{{ t.losses }}-{{ t.ties }}</div>
-          <div class="mobile-standing-pf">{{ t.points_for }}</div>
-        </div>
-      </div>
-      {% endfor %}
-    </div>
+    <div class="mobile-standings" id="mobile-standings-container">
+      <!-- Loading state -->
+      <div class="loading-state" id="mobile-standings-loading">
+        <div class="loading-spinner"></div>
+        <div class="loading-text">Loading standings...</div>
+              </div>
+      <!-- Content will be loaded here -->
+      <div id="mobile-standings-content" style="display: none;"></div>
+              </div>
 
     <!-- Right: Booms & Busts (bottom row) -->
     <section class="card bb-card bb-section-below">
       <h2>Booms &amp; Busts</h2>
-      <div class="bb-positions-grid">
-        {% for row in incentives.boom_bust_by_position %}
-        <div class="bb-position-card">
-          <div class="bb-position-header">{{ row.position }}</div>
-          
-          <div class="bb-sections-container">
-            <!-- Booms Section -->
-            <div class="bb-section">
-              <div class="bb-section-header boom">
-                <span class="bb-section-title">Top 3 Booms</span>
-              </div>
-              <div class="bb-players-list">
-                {% for player in row.booms %}
-                <div class="bb-player-item boom">
-                  <img class="bb-player-nfl-logo" src="{{ player.nfl_logo }}" alt="{{ player.nfl_team }} logo" />
-                  <div class="bb-player-info">
-                    <div class="bb-player-name">{{ player.player_name }}</div>
-                    <div class="bb-player-team">{{ player.fantasy_team }}</div>
-                  </div>
-                  <div class="bb-player-points">{{ player.points }} pts</div>
-                </div>
-                {% empty %}
-                <div class="bb-player-item boom no-data">
-                  <div class="bb-player-info">
-                    <div class="bb-player-name muted">No data</div>
-                  </div>
-                </div>
-                {% endfor %}
-              </div>
-            </div>
-            
-            <!-- Busts Section -->
-            <div class="bb-section">
-              <div class="bb-section-header bust">
-                <span class="bb-section-title">Top 3 Busts</span>
-              </div>
-              <div class="bb-players-list">
-                {% for player in row.busts %}
-                <div class="bb-player-item bust">
-                  <img class="bb-player-nfl-logo" src="{{ player.nfl_logo }}" alt="{{ player.nfl_team }} logo" />
-                  <div class="bb-player-info">
-                    <div class="bb-player-name">{{ player.player_name }}</div>
-                    <div class="bb-player-team">{{ player.fantasy_team }}</div>
-                  </div>
-                  <div class="bb-player-points">{{ player.points }} pts</div>
-                </div>
-                {% empty %}
-                <div class="bb-player-item bust no-data">
-                  <div class="bb-player-info">
-                    <div class="bb-player-name muted">No data</div>
-                  </div>
-                </div>
-                {% endfor %}
-              </div>
-            </div>
-          </div>
+      <div class="bb-positions-grid" id="booms-busts-container">
+        <!-- Loading state -->
+        <div class="loading-state" id="booms-busts-loading">
+          <div class="loading-spinner"></div>
+          <div class="loading-text">Loading player data...</div>
         </div>
-        {% empty %}
-        <div class="bb-no-data">
-          <span class="muted">No player data available.</span>
-        </div>
-        {% endfor %}
+        <!-- Content will be loaded here -->
+        <div id="booms-busts-content" style="display: none;"></div>
       </div>
-      
-
     </section>
   </div>
 
   <!-- Mobile Booms/Busts Layout - Positioned at bottom of page -->
-  <div class="mobile-bb-bottom">
-    {% for row in incentives.boom_bust_by_position %}
-    <div class="mobile-bb-position">
-      <div class="mobile-bb-position-title">{{ row.position }}</div>
-      <div class="mobile-bb-sections-container">
-        <!-- Mobile Booms -->
-        <div class="mobile-bb-section">
-          <div class="mobile-bb-section-title">Top 3 Booms</div>
-          <div class="mobile-bb-players-list">
-            {% for player in row.booms %}
-            <div class="mobile-bb-player-item boom">
-              <img class="mobile-bb-player-nfl-logo" src="{{ player.nfl_logo }}" alt="{{ player.nfl_team }} logo" />
-              <div class="mobile-bb-player-info">
-                <div class="mobile-bb-player-name">{{ player.player_name }}</div>
-                <div class="mobile-bb-player-team">{{ player.fantasy_team }}</div>
-              </div>
-              <div class="mobile-bb-player-points">{{ player.points }} pts</div>
-            </div>
-            {% empty %}
-            <div class="mobile-bb-player-item boom no-data">
-              <div class="bb-player-info">
-                <div class="bb-player-name muted">No data</div>
-              </div>
-            </div>
-            {% endfor %}
-          </div>
-        </div>
-        
-        <!-- Mobile Busts -->
-        <div class="mobile-bb-section">
-          <div class="mobile-bb-section-title">Top 3 Busts</div>
-          <div class="mobile-bb-players-list">
-            {% for player in row.busts %}
-            <div class="mobile-bb-player-item bust">
-              <img class="mobile-bb-player-nfl-logo" src="{{ player.nfl_logo }}" alt="{{ player.nfl_team }} logo" />
-              <div class="mobile-bb-player-info">
-                <div class="mobile-bb-player-name">{{ player.player_name }}</div>
-                <div class="mobile-bb-player-team">{{ player.fantasy_team }}</div>
-              </div>
-              <div class="mobile-bb-player-points">{{ player.points }} pts</div>
-            </div>
-            {% empty %}
-            <div class="mobile-bb-player-item bust no-data">
-              <div class="bb-player-info">
-                <div class="bb-player-name muted">No data</div>
-              </div>
-            </div>
-            {% endfor %}
-          </div>
-        </div>
-      </div>
+  <div class="mobile-bb-bottom" id="mobile-booms-busts-container">
+    <!-- Loading state -->
+    <div class="loading-state" id="mobile-booms-busts-loading">
+      <div class="loading-spinner"></div>
+      <div class="loading-text">Loading player data...</div>
     </div>
-          {% endfor %}
+    <!-- Content will be loaded here -->
+    <div id="mobile-booms-busts-content" style="display: none;"></div>
+    
   </div>
 
   <script>
-    (function() {
-      // Overview loading and error handling
-      const overviewElement = document.getElementById('overview');
-      const overviewSpinner = document.getElementById('overview-spinner');
-      
-      // Function to load overview content
-      async function loadOverview() {
-        try {
-          const response = await fetch(`{% url 'weekly_report_overview_api' year=year week=week %}`);
-          if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-          }
-          const data = await response.json();
-          
-          if (data.overview) {
-            overviewElement.innerHTML = data.overview;
-          } else {
-            overviewElement.innerHTML = '<span class="error">No overview available.</span>';
-          }
-        } catch (error) {
-          console.error('Error loading overview:', error);
+    // Function to load overview content
+    async function loadOverview() {
+      try {
+        const overviewElement = document.getElementById('overview');
+        const overviewSpinner = document.getElementById('overview-spinner');
+        
+        if (!overviewElement || !overviewSpinner) {
+          console.error('Overview elements not found');
+          return;
+        }
+        
+        const response = await fetch(`{% url 'weekly_report_overview_api' year=year week=week %}`);
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const data = await response.json();
+        
+        if (data.overview) {
+          overviewElement.innerHTML = data.overview;
+        } else {
+          overviewElement.innerHTML = '<span class="error">No overview available.</span>';
+        }
+      } catch (error) {
+        console.error('Error loading overview:', error);
+        const overviewElement = document.getElementById('overview');
+        if (overviewElement) {
           overviewElement.innerHTML = '<span class="error">Failed to load overview. Please try again later.</span>';
-        } finally {
-          if (overviewSpinner) {
-            overviewSpinner.style.display = 'none';
-          }
+        }
+      } finally {
+        const overviewSpinner = document.getElementById('overview-spinner');
+        if (overviewSpinner) {
+          overviewSpinner.style.display = 'none';
         }
       }
+    }
+    
+    // Progressive component loading
+    async function loadAllComponents() {
+      console.log('loadAllComponents called');
+      const year = {{ year }};
+      const week = {{ week }};
+      console.log(`Loading components for year ${year}, week ${week}`);
       
-      // Load overview when page loads
-      loadOverview();
-    })();
-  </script>
+      // Load all components in parallel
+      await Promise.all([
+        loadStandings(year, week),
+        loadScores(year, week),
+        loadBoomsBusts(year, week),
+        loadAwards(year, week),
+        loadIncentive(year, week)
+      ]);
+      console.log('All components loaded');
+    }
+    
+    // Load standings data
+    async function loadStandings(year, week) {
+      console.log('Loading standings...');
+      try {
+        const response = await fetch(`/report/${year}/${week}/standings.json`);
+        const data = await response.json();
+        
+        if (data.standings) {
+          // Hide loading state
+          document.getElementById('standings-loading').style.display = 'none';
+          document.getElementById('mobile-standings-loading').style.display = 'none';
+          
+          // Render desktop standings
+          renderStandings(data.standings, 'standings-content', false);
+          // Render mobile standings
+          renderStandings(data.standings, 'mobile-standings-content', true);
+          
+          // Show content
+          document.getElementById('standings-content').style.display = 'block';
+          document.getElementById('mobile-standings-content').style.display = 'block';
+        }
+      } catch (error) {
+        console.error('Error loading standings:', error);
+        showError('standings-loading', 'Failed to load standings');
+      }
+    }
+    
+    // Load scores data
+    async function loadScores(year, week) {
+      console.log('Loading scores...');
+      try {
+        const response = await fetch(`/report/${year}/${week}/scoreboard.json`);
+        const data = await response.json();
+        
+        if (data.scoreboard) {
+          // Hide loading state
+          document.getElementById('scores-loading').style.display = 'none';
+          document.getElementById('mobile-scores-loading').style.display = 'none';
+          
+          // Render desktop scores
+          renderScores(data.scoreboard, data.team_logos, 'scores-content', false);
+          // Render mobile scores
+          renderScores(data.scoreboard, data.team_logos, 'mobile-scores-content', true);
+          
+          // Show content
+          document.getElementById('scores-content').style.display = 'block';
+          document.getElementById('mobile-scores-content').style.display = 'block';
+        }
+      } catch (error) {
+        console.error('Error loading scores:', error);
+        showError('scores-loading', 'Failed to load scores');
+      }
+    }
+    
+    // Load booms and busts data
+    async function loadBoomsBusts(year, week) {
+      try {
+        const response = await fetch(`/report/${year}/${week}/booms-busts.json`);
+        const data = await response.json();
+        
+        if (data.incentives) {
+          // Hide loading state
+          document.getElementById('booms-busts-loading').style.display = 'none';
+          document.getElementById('mobile-booms-busts-loading').style.display = 'none';
+          
+          // Render desktop booms and busts
+          renderBoomsBusts(data.incentives, data.nfl_logos, 'booms-busts-container', false);
+          // Render mobile booms and busts
+          renderBoomsBusts(data.incentives, data.nfl_logos, 'mobile-booms-busts-content', true);
+          
+          // Show content
+          document.getElementById('booms-busts-container').style.display = 'block';
+          document.getElementById('mobile-booms-busts-content').style.display = 'block';
+        }
+      } catch (error) {
+        console.error('Error loading booms and busts:', error);
+        showError('booms-busts-loading', 'Failed to load player data');
+      }
+    }
+    
+    // Load awards data
+    async function loadAwards(year, week) {
+      try {
+        const response = await fetch(`/report/${year}/${week}/awards.json`);
+        const data = await response.json();
+        
+        if (data.awards) {
+          // Hide loading state
+          document.getElementById('awards-loading').style.display = 'none';
+          
+          // Render awards
+          renderAwards(data.awards, 'awards-content');
+          
+          // Show content
+          document.getElementById('awards-content').style.display = 'block';
+        }
+      } catch (error) {
+        console.error('Error loading awards:', error);
+        showError('awards-loading', 'Failed to load awards');
+      }
+    }
+    
+    // Load incentive data
+    async function loadIncentive(year, week) {
+      try {
+        const response = await fetch(`/report/${year}/${week}/booms-busts.json`);
+        const data = await response.json();
+        
+        if (data.incentives) {
+          // Hide loading state
+          document.getElementById('incentive-loading').style.display = 'none';
+          
+          // Render incentive
+          renderIncentive(data.incentives, 'incentive-content');
+          
+          // Show content
+          document.getElementById('incentive-content').style.display = 'block';
+        }
+      } catch (error) {
+        console.error('Error loading incentive:', error);
+        showError('incentive-loading', 'Failed to load incentive');
+      }
+    }
+    
+    // Render functions
+    function renderStandings(standings, containerId, isMobile) {
+      const container = document.getElementById(containerId);
+      const playoffTeamCount = {{ playoff_team_count }};
+      
+      let html = '';
+      standings.forEach(team => {
+        const playoffClass = team.rank <= playoffTeamCount ? 'playoff' : '';
+        const cutoffClass = team.rank === playoffTeamCount + 1 ? 'cutoff' : '';
+        
+        if (isMobile) {
+          html += `
+            <div class="mobile-standing-item ${playoffClass} ${cutoffClass}">
+              <div class="mobile-standing-rank">#${team.rank}</div>
+              <div class="mobile-standing-team">
+                <div class="mobile-team-name">${team.team_name}</div>
+                ${team.owner_name ? `<div class="mobile-team-owner">${team.owner_name}</div>` : ''}
+                                 ${team.movement_abs ? `
+                   <span class="move ${team.movement_is_up ? 'up' : 'down'}">
+                     ${team.movement_is_up ? '▲' : '▼'} ${team.movement_abs}
+                   </span>
+                 ` : ''}
+               </div>
+               <div class="mobile-standing-stats">
+                 <div class="mobile-standing-record">${team.wins}-${team.losses}-${team.ties}</div>
+               </div>
+             </div>
+           `;
+         } else {
+           html += `
+             <div class="standing-team-card ${playoffClass} ${cutoffClass}">
+               <div class="standing-rank">
+                 <div class="rank-number">#${team.rank}</div>
+                 ${team.rank <= playoffTeamCount ? '<div class="playoff-badge">🏆</div>' : ''}
+               </div>
+               <div class="standing-team-info">
+                 <div class="team-name">${team.team_name}</div>
+                 ${team.owner_name ? `<div class="team-owner">${team.owner_name}</div>` : ''}
+                 ${team.movement_abs ? `
+                   <div class="movement-indicator ${team.movement_is_up ? 'up' : 'down'}">
+                     ${team.movement_is_up ? '▲' : '▼'} ${team.movement_abs}
+                   </div>
+                 ` : ''}
+               </div>
+               <div class="standing-stats">
+                 <div class="record-badge">${team.wins}-${team.losses}-${team.ties}</div>
+               </div>
+             </div>
+           `;
+         }
+       });
+       
+       container.innerHTML = html;
+     }
+     
+     function renderScores(scoreboard, teamLogos, containerId, isMobile) {
+       const container = document.getElementById(containerId);
+       
+       let html = '';
+       scoreboard.forEach(matchup => {
+         if (isMobile) {
+           html += `
+             <div class="mobile-score-card">
+               <div class="mobile-score-team">
+                 ${matchup.home_logo ? `<img class="mobile-score-team-logo" src="${teamLogos[matchup.home_id] || '/assets/team-logo/' + matchup.home_id + '.png'}" alt="${matchup.home_team} logo" />` : ''}
+                 <div class="mobile-score-team-details">
+                   <div class="mobile-team-name">${matchup.home_team}</div>
+                   ${matchup.home_owner ? `<div class="mobile-team-owner">${matchup.home_owner}</div>` : ''}
+                   <div class="mobile-team-record">${matchup.home_wins}-${matchup.home_losses}-${matchup.home_ties}</div>
+                 </div>
+                 <div class="mobile-score-home">${(Number(matchup.home_score ?? 0)).toFixed(1)}</div>
+               </div>
+               <div class="mobile-score-vs">vs</div>
+               <div class="mobile-score-team">
+                 ${matchup.away_logo ? `<img class="mobile-score-team-logo" src="${teamLogos[matchup.away_id] || '/assets/team-logo/' + matchup.away_id + '.png'}" alt="${matchup.away_team} logo" />` : ''}
+                 <div class="mobile-score-team-details">
+                   <div class="mobile-team-name">${matchup.away_team}</div>
+                   ${matchup.away_owner ? `<div class="mobile-team-owner">${matchup.away_owner}</div>` : ''}
+                   <div class="mobile-team-record">${matchup.away_wins}-${matchup.away_losses}-${matchup.away_ties}</div>
+                 </div>
+                 <div class="mobile-score-away">${(Number(matchup.away_score ?? 0)).toFixed(1)}</div>
+               </div>
+             </div>
+           `;
+         } else {
+           html += `
+             <div class="score-matchup-card">
+               <div class="score-team-left">
+                 ${matchup.home_logo ? `<img class="score-team-logo" src="${teamLogos[matchup.home_id] || '/assets/team-logo/' + matchup.home_id + '.png'}" alt="${matchup.home_team} logo" />` : ''}
+                 <div class="score-team-details">
+                   <div class="team-name">${matchup.home_team}</div>
+                   ${matchup.home_owner ? `<div class="team-owner">${matchup.home_owner}</div>` : ''}
+                   <div class="team-record">${matchup.home_wins}-${matchup.home_losses}-${matchup.home_ties}</div>
+                 </div>
+               </div>
+               <div class="score-scores-container">
+                 <div class="score-home">${(Number(matchup.home_score ?? 0)).toFixed(1)}</div>
+                 <div class="score-vs">vs</div>
+                 <div class="score-away">${(Number(matchup.away_score ?? 0)).toFixed(1)}</div>
+               </div>
+               <div class="score-team-right">
+                 <div class="score-team-details">
+                   <div class="team-name">${matchup.away_team}</div>
+                   ${matchup.away_owner ? `<div class="team-owner">${matchup.away_owner}</div>` : ''}
+                   <div class="team-record">${matchup.away_wins}-${matchup.away_losses}-${matchup.away_ties}</div>
+                 </div>
+                 ${matchup.away_logo ? `<img class="score-team-logo" src="${teamLogos[matchup.away_id] || '/assets/team-logo/' + matchup.away_id + '.png'}" alt="${matchup.away_team} logo" />` : ''}
+               </div>
+             </div>
+           `;
+         }
+       });
+       
+       container.innerHTML = html;
+     }
+     
+     function renderBoomsBusts(incentives, nflLogos, containerId, isMobile) {
+       const container = document.getElementById(containerId);
+       const positions = ['QB', 'RB', 'WR', 'TE', 'K', 'DEF'];
+       
+       let html = '';
+       positions.forEach(position => {
+         const row = incentives.boom_bust_by_position.find(r => r.position === position);
+         // Always generate a card for each position, even if empty
+         const booms = row ? row.booms : [];
+         const busts = row ? row.busts : [];
+         
+         if (isMobile) {
+             html += `
+               <div class="mobile-bb-position">
+                 <div class="mobile-bb-position-title">${position}</div>
+                 <div class="mobile-bb-sections-container">
+                   <div class="mobile-bb-section">
+                     <div class="mobile-bb-section-title">Top 3 Booms</div>
+                     <div class="mobile-bb-players-list">
+                       ${booms.map(player => `
+                         <div class="mobile-bb-player-item boom">
+                           <img class="mobile-bb-player-nfl-logo" src="${player.nfl_logo}" alt="${player.nfl_team} logo" />
+                           <div class="mobile-bb-player-info">
+                             <div class="mobile-bb-player-name">${player.player_name}</div>
+                             <div class="mobile-bb-player-team">${player.fantasy_team}</div>
+                           </div>
+                           <div class="mobile-bb-player-points">${player.points} pts</div>
+                         </div>
+                       `).join('')}
+                     </div>
+                   </div>
+                   <div class="mobile-bb-section">
+                     <div class="mobile-bb-section-title">Top 3 Busts</div>
+                     <div class="mobile-bb-players-list">
+                       ${busts.map(player => `
+                         <div class="mobile-bb-player-item bust">
+                           <img class="mobile-bb-player-nfl-logo" src="${player.nfl_logo}" alt="${player.nfl_team} logo" />
+                           <div class="mobile-bb-player-info">
+                             <div class="mobile-bb-player-name">${player.player_name}</div>
+                             <div class="mobile-bb-player-team">${player.fantasy_team}</div>
+                           </div>
+                           <div class="mobile-bb-player-points">${player.points} pts</div>
+                         </div>
+                       `).join('')}
+                     </div>
+                   </div>
+                 </div>
+               </div>
+             `;
+           } else {
+             html += `
+               <div class="bb-position-card">
+                 <div class="bb-position-header">${position}</div>
+                 <div class="bb-sections-container">
+                   <div class="bb-section">
+                     <div class="bb-section-header boom">
+                       <span class="bb-section-title">Top 3 Booms</span>
+                     </div>
+                     <div class="bb-players-list">
+                       ${booms.map(player => `
+                         <div class="bb-player-item boom">
+                           <img class="bb-player-nfl-logo" src="${player.nfl_logo}" alt="${player.nfl_team} logo" />
+                           <div class="bb-player-info">
+                             <div class="bb-player-name">${player.player_name}</div>
+                             <div class="bb-player-team">${player.fantasy_team}</div>
+                           </div>
+                           <div class="bb-player-points">${player.points} pts</div>
+                         </div>
+                       `).join('')}
+                     </div>
+                   </div>
+                   <div class="bb-section">
+                     <div class="bb-section-header bust">
+                       <span class="bb-section-title">Top 3 Busts</span>
+                     </div>
+                     <div class="bb-players-list">
+                       ${busts.map(player => `
+                         <div class="bb-player-item bust">
+                           <img class="bb-player-nfl-logo" src="${player.nfl_logo}" alt="${player.nfl_team} logo" />
+                           <div class="bb-player-name">${player.player_name}</div>
+                           <div class="bb-player-team">${player.fantasy_team}</div>
+                           <div class="bb-player-points">${player.points} pts</div>
+                         </div>
+                       `).join('')}
+                     </div>
+                   </div>
+                 </div>
+               </div>
+             `;
+           }
+         
+       });
+       
+       container.innerHTML = html;
+      }
+     
+     function renderAwards(awards, containerId) {
+       const container = document.getElementById(containerId);
+       
+       let html = '<ul class="awards">';
+       awards.forEach(award => {
+         html += `
+           <li class="award">
+             <span class="award-icon">⭐</span>
+             <div class="award-body">
+               <div class="award-title">${award.title}</div>
+               <div class="award-text">${award.text}</div>
+             </div>
+           </li>
+         `;
+       });
+       html += '</ul>';
+       
+       container.innerHTML = html;
+     }
+     
+     function renderIncentive(incentives, containerId) {
+       const container = document.getElementById(containerId);
+       
+       // This would need to be enhanced to get the actual incentive data
+       // For now, showing a placeholder
+       const html = `
+         <div class="incentive-content">
+           <div class="incentive-section">
+             <div class="incentive-label">This Week's Challenge</div>
+             <div class="incentive-title">Weekly Challenge</div>
+           </div>
+           <div class="incentive-section">
+             <div class="incentive-label">🏅 Winner</div>
+             <div class="incentive-winner">
+               <span class="pending-text">TBD - Check back after the games!</span>
+             </div>
+           </div>
+           <div class="incentive-section">
+             <div class="incentive-label">🎯 Next Week's Challenge</div>
+             <div class="incentive-next">Next Challenge</div>
+           </div>
+         </div>
+       `;
+       
+       container.innerHTML = html;
+     }
+     
+     function showError(loadingId, message) {
+       const loadingElement = document.getElementById(loadingId);
+       loadingElement.innerHTML = `
+         <div style="color: var(--danger); text-align: center; padding: 1rem;">
+           <div style="margin-bottom: 0.5rem;">⚠️</div>
+           <div>${message}</div>
+         </div>
+       `;
+     }
+     
+     // Start loading all components after all functions are defined
+     document.addEventListener('DOMContentLoaded', function() {
+       console.log('DOM loaded, starting component loading...');
+       loadOverview();
+       loadAllComponents();
+     });
+   </script>
 </body>
 </html>

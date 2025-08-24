@@ -89,9 +89,9 @@ def describe_incentive_title(key: str) -> str:
 
 # NFL team logo helpers
 _NFL_VALID_CODES = {
-    "ARI","ATL","BAL","BUF","CAR","CHI","CIN","CLE","DAL","DEN","DET","GB","HOU","IND",
-    "JAX","KC","LAC","LAR","LV","MIA","MIN","NE","NO","NYG","NYJ","PHI","PIT","SEA","SF",
-    "TB","TEN","WAS",
+    "ARI", "ATL", "BAL", "BUF", "CAR", "CHI", "CIN", "CLE", "DAL", "DEN", "DET", "GB", "HOU", "IND",
+    "JAX", "KC", "LAC", "LAR", "LV", "MIA", "MIN", "NE", "NO", "NYG", "NYJ", "PHI", "PIT", "SEA", "SF",
+    "TB", "TEN", "WAS",
 }
 _NFL_NORMALIZE = {
     "JAC": "JAX",

@@ -269,6 +269,7 @@ ul {
   align-items: center;
   position: relative;
   min-height: 120px; /* Ensure cards have proper height */
+  margin-bottom: 12px;
 }
 
 /* Hover effect for matchup cards */
@@ -857,6 +858,7 @@ ul {
   gap: 12px;
   overflow: hidden;
   min-width: 0;
+  margin-bottom: 12px;
 }
 
 /* Hover effect for matchup cards */
@@ -1123,9 +1125,9 @@ ul {
  * Mobile-specific layouts are shown for scores, standings, and booms & busts.
  */
 
-/* Large tablets and small desktops */
+/* Large tablets and small desktops - but preserve booms & busts 3-column layout */
 @media (max-width: 1200px) {
-  /* Collapse to single column layout */
+  /* Collapse main grid to single column layout */
   .grid {
     grid-template-columns: 1fr;
     grid-template-rows: auto auto auto auto auto;
@@ -1146,8 +1148,8 @@ ul {
   }
 }
 
-/* iPad and tablet-specific layout */
-@media (min-width: 769px) and (max-width: 1024px) {
+/* iPad and tablet-specific layout - only for actual tablet devices */
+@media (min-width: 769px) and (max-width: 1024px) and (max-height: 1366px) {
   /* Single column layout for iPad - stack everything vertically */
   .grid {
     grid-template-columns: 1fr;
@@ -1246,8 +1248,8 @@ ul {
   }
 }
 
-/* iPad Portrait Mode Specific Adjustments */
-@media (min-width: 769px) and (max-width: 1024px) and (orientation: portrait) {
+/* iPad Portrait Mode Specific Adjustments - only for actual tablet devices */
+@media (min-width: 769px) and (max-width: 1024px) and (max-height: 1366px) and (orientation: portrait) {
   /* Single column layout for iPad portrait */
   .grid {
     grid-template-columns: 1fr;
@@ -1471,14 +1473,62 @@ ul {
 
 /* Horizontal 3x3 grid layout for booms & busts positions */
 .bb-positions-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr); /* 3 columns for 6 positions (2 rows) */
-  grid-template-rows: auto auto; /* 2 rows */
-  gap: 8px; /* Further reduced gap for tighter layout */
+  display: grid !important;
+  grid-template-columns: repeat(3, 1fr) !important; /* 3 columns for 6 positions (2 rows) */
+  grid-template-rows: auto auto !important; /* 2 rows */
+  gap: 8px !important; /* Further reduced gap for tighter layout */
   margin-top: 16px;
   width: 100%; /* Ensure grid fits within parent */
   max-width: 100%; /* Prevent overflow */
   box-sizing: border-box; /* Include padding/borders in width calculation */
+}
+
+/* Force 3-column layout for booms & busts regardless of screen size */
+section.card.bb-card .bb-positions-grid {
+  display: grid !important;
+  grid-template-columns: repeat(3, 1fr) !important;
+  grid-template-rows: auto auto !important;
+  gap: 8px !important;
+}
+
+/* Ultra-specific override for booms & busts grid */
+body .grid .bb-section-below .bb-positions-grid {
+  display: grid !important;
+  grid-template-columns: repeat(3, 1fr) !important;
+  grid-template-rows: auto auto !important;
+  gap: 8px !important;
+}
+
+/* Force the grid layout with maximum specificity */
+html body .grid .bb-section-below .bb-positions-grid {
+  display: grid !important;
+  grid-template-columns: repeat(3, 1fr) !important;
+  grid-template-rows: auto auto !important;
+  gap: 8px !important;
+}
+
+/* Nuclear option - override ALL media queries for booms & busts grid */
+.bb-positions-grid {
+  display: grid !important;
+  grid-template-columns: repeat(3, 1fr) !important;
+  grid-template-rows: auto auto !important;
+  gap: 8px !important;
+}
+
+/* Ensure grid items behave correctly */
+.bb-positions-grid > * {
+  display: block !important;
+  width: 100% !important;
+  height: auto !important;
+}
+
+/* Force grid items to use grid layout */
+.bb-positions-grid .bb-position-card {
+  display: block !important;
+  width: 100% !important;
+  height: auto !important;
+  grid-column: auto !important;
+  grid-row: auto !important;
 }
 
 /* Individual position card (e.g., "Quarterbacks") */
@@ -1571,6 +1621,7 @@ ul {
   display: flex;
   flex-direction: column;
   gap: 0; /* No gap between rows for table-like appearance */
+  width: 100%;
 }
 
 /* Individual player item - simple table row style */
@@ -1582,6 +1633,7 @@ ul {
   background: white;
   border-bottom: 1px solid var(--gray-100);
   transition: background-color 0.2s ease;
+  flex-wrap: nowrap;
 }
 
 .bb-player-item:last-child {
@@ -1622,6 +1674,7 @@ ul {
   border: 1px solid var(--gray-200);
   background: white;
   flex-shrink: 0;
+  flex: 0 0 auto;
 }
 
 /* Player information container */
@@ -1631,6 +1684,7 @@ ul {
   gap: 2px;
   flex: 1; /* Take up available space */
   min-width: 120px; /* Ensure enough space for names and teams */
+  overflow: hidden;
 }
 
 /* Player name - readable font size */
@@ -1661,6 +1715,7 @@ ul {
   text-align: right;
   min-width: 40px; /* Ensure points don't get cut off */
   flex-shrink: 0; /* Prevent points from shrinking */
+  margin-left: auto;
 }
 
 /* Bust player points in red */
@@ -1700,6 +1755,7 @@ ul {
   gap: 12px; /* Reduced gap for more compact layout */
   align-items: center;
   transition: all 0.2s ease;
+  margin-bottom: 8px;
 }
 
 /* Hover effect for team cards */
@@ -1834,13 +1890,12 @@ ul {
 /* Win-loss record badge */
 .record-badge {
   background: var(--gray-100);
-  color: var(--gray-700);
-  padding: 4px 8px;
-  border-radius: 6px;
-  font-size: 12px;
-  font-weight: 600;
-  text-align: center;
-  min-width: 60px;
+  color: var(--gray-800);
+  border: 1px solid var(--gray-200);
+  border-radius: 9999px;
+  padding: 4px 10px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
 }
 
 /* Total fantasy points display */
@@ -3074,4 +3129,78 @@ tbody tr:hover {
   .section-divider {
     margin: 12px 0 16px;
   }
+}
+
+/* ===== LOADING STATES =====
+ * 
+ * Loading spinners and states for progressive component loading.
+ * Provides visual feedback while components are being fetched.
+ */
+.loading-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  text-align: center;
+}
+
+.loading-spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid var(--gray-200);
+  border-top: 4px solid var(--primary);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 1rem;
+}
+
+.loading-text {
+  color: var(--gray-600);
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Desktop: prefer 2 columns for Booms & Busts to improve fit on typical screens */
+@media (min-width: 1025px) and (max-width: 1439px) {
+  html body .grid .bb-section-below .bb-positions-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    grid-template-rows: auto auto auto !important; /* 3 rows for 6 positions */
+  }
+}
+
+/* Final desktop override: use 2 columns for Booms & Busts for better fit */
+@media (min-width: 1025px) {
+  html body .grid section.card.bb-card.bb-section-below .bb-positions-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    grid-template-rows: auto auto auto !important;
+  }
+}
+
+/* Standings record badge styling */
+.record-badge {
+  background: var(--gray-100);
+  color: var(--gray-800);
+  border: 1px solid var(--gray-200);
+  border-radius: 9999px;
+  padding: 4px 10px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+/* Mobile standings record styling */
+.mobile-standing-record {
+  background: var(--gray-100);
+  color: var(--gray-800);
+  border: 1px solid var(--gray-200);
+  border-radius: 9999px;
+  padding: 3px 8px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  width: fit-content;
 }

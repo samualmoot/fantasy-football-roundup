@@ -21,6 +21,10 @@ from roundup.views import (
     weekly_report,
     weekly_report_narrative_api,
     weekly_report_overview_api,
+    weekly_report_scoreboard_api,
+    weekly_report_standings_api,
+    weekly_report_booms_busts_api,
+    weekly_report_awards_api,
     team_logo,
     draft_analysis,
 )
@@ -30,6 +34,11 @@ urlpatterns = [
     path('report/<int:year>/<int:week>/', weekly_report, name='weekly_report'),
     path('report/<int:year>/<int:week>/narrative.json', weekly_report_narrative_api, name='weekly_report_narrative_api'),
     path('report/<int:year>/<int:week>/overview.json', weekly_report_overview_api, name='weekly_report_overview_api'),
+    # Component APIs for progressive loading
+    path('report/<int:year>/<int:week>/scoreboard.json', weekly_report_scoreboard_api, name='weekly_report_scoreboard_api'),
+    path('report/<int:year>/<int:week>/standings.json', weekly_report_standings_api, name='weekly_report_standings_api'),
+    path('report/<int:year>/<int:week>/booms-busts.json', weekly_report_booms_busts_api, name='weekly_report_booms_busts_api'),
+    path('report/<int:year>/<int:week>/awards.json', weekly_report_awards_api, name='weekly_report_awards_api'),
 
         # Homepage redirect
     path('', homepage, name='homepage'),
