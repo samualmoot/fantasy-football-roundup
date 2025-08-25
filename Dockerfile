@@ -1,5 +1,6 @@
 # Playwright base image includes Chromium and all required system libraries
-FROM mcr.microsoft/playwright:v1.54-jammy
+# Note: registry is mcr.microsoft.com (not mcr.microsoft)
+FROM mcr.microsoft.com/playwright:v1.54.0-jammy
 
 WORKDIR /app
 
