@@ -1,6 +1,5 @@
-# Playwright base image includes Chromium and all required system libraries
-# Note: registry is mcr.microsoft.com (not mcr.microsoft)
-FROM mcr.microsoft.com/playwright:v1.54.0-jammy
+# Playwright Python image includes Python + browsers + system libraries
+FROM mcr.microsoft.com/playwright/python:v1.54.0-jammy
 
 WORKDIR /app
 
