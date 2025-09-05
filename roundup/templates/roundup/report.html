@@ -210,20 +210,21 @@
     
     // Progressive component loading
     async function loadAllComponents() {
-      
       const year = {{ year }};
       const week = {{ week }};
-      
+
+      // Load scores first for fastest first paint
+      await loadScores(year, week);
+
+      // Then load the rest in parallel
       await Promise.all([
         loadStandings(year, week),
-        loadScores(year, week),
         loadBoomsBusts(year, week),
         loadAwards(year, week),
         loadIncentive(year, week)
       ]);
-      
+
       window.__REPORT_COMPONENTS_READY__ = true;
-      // If print mode, give the browser a small time slice to paint
       if (document.body.classList.contains('print-mode')) {
         await new Promise(r => setTimeout(r, 300));
       }

@@ -1,6 +1,11 @@
 import os
 from datetime import datetime
 from espn_api.football import League
+import time
+
+# Simple in-process cache for League objects keyed by year
+_LEAGUE_CACHE: dict[int, dict] = {}
+_LEAGUE_TTL_SECONDS = 600  # 10 minutes
 
 
 def get_league(year=None):
@@ -20,6 +25,47 @@ def get_league(year=None):
     if not swid or not espn_s2:
         raise ValueError("Missing ESPN_SWID or ESPN_S2 environment variables.")
     league = League(league_id=league_id, year=year, swid=swid, espn_s2=espn_s2)
+    return league
+
+
+def get_league_cached(year=None):
+    """
+    Return a memoized League object for the given year with a short TTL to avoid
+    repeated ESPN authentication and metadata fetches.
+    """
+    y = year or datetime.now().year
+    swid = os.environ.get('ESPN_SWID')
+    espn_s2 = os.environ.get('ESPN_S2')
+    league_id_env = os.environ.get('ESPN_LEAGUE_ID')
+    try:
+        league_id = int(league_id_env) if league_id_env else 1470361165
+    except ValueError:
+        league_id = 1470361165
+
+    if not swid or not espn_s2:
+        raise ValueError("Missing ESPN_SWID or ESPN_S2 environment variables.")
+
+    now = time.time()
+    entry = _LEAGUE_CACHE.get(y)
+    if entry:
+        if (
+            now - entry.get("ts", 0) < _LEAGUE_TTL_SECONDS
+            and entry.get("swid") == swid
+            and entry.get("espn_s2") == espn_s2
+            and entry.get("league_id") == league_id
+        ):
+            league_obj = entry.get("league")
+            if league_obj is not None:
+                return league_obj
+
+    league = League(league_id=league_id, year=y, swid=swid, espn_s2=espn_s2)
+    _LEAGUE_CACHE[y] = {
+        "league": league,
+        "ts": now,
+        "swid": swid,
+        "espn_s2": espn_s2,
+        "league_id": league_id,
+    }
     return league
 
 
