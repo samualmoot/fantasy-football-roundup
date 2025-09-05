@@ -338,15 +338,15 @@
     // Load incentive data
     async function loadIncentive(year, week) {
       try {
-        const response = await fetch(`/report/${year}/${week}/booms-busts.json`);
+        const response = await fetch(`/report/${year}/${week}/incentive.json`);
         const data = await response.json();
         
-        if (data.incentives) {
+        if (data.weekly_incentive) {
           // Hide loading state
           document.getElementById('incentive-loading').style.display = 'none';
           
           // Render incentive
-          renderIncentive(data.incentives, 'incentive-content');
+          renderIncentive(data.weekly_incentive, 'incentive-content');
           
           // Show content
           document.getElementById('incentive-content').style.display = 'block';
@@ -598,26 +598,26 @@
        container.innerHTML = html;
      }
      
-     function renderIncentive(incentives, containerId) {
+     function renderIncentive(weeklyIncentive, containerId) {
        const container = document.getElementById(containerId);
        
-       // This would need to be enhanced to get the actual incentive data
-       // For now, showing a placeholder
+       const thisTitle = weeklyIncentive.this_title || 'Weekly Challenge';
+       const winnerText = weeklyIncentive.winner_text || '';
+       const nextTitle = weeklyIncentive.next_title || '';
+
        const html = `
          <div class="incentive-content">
            <div class="incentive-section">
              <div class="incentive-label">This Week's Challenge</div>
-             <div class="incentive-title">Weekly Challenge</div>
+             <div class="incentive-title">${thisTitle}</div>
            </div>
            <div class="incentive-section">
              <div class="incentive-label">🏅 Winner</div>
-             <div class="incentive-winner">
-               <span class="pending-text">TBD - Check back after the games!</span>
-             </div>
+             <div class="incentive-winner">${winnerText ? winnerText : '<span class="pending-text">TBD - Check back after the games!</span>'}</div>
            </div>
            <div class="incentive-section">
              <div class="incentive-label">🎯 Next Week's Challenge</div>
-             <div class="incentive-next">Next Challenge</div>
+             <div class="incentive-next">${nextTitle || 'Next Challenge'}</div>
            </div>
          </div>
        `;

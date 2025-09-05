@@ -21,7 +21,7 @@ def _get_cached_box_scores(league: League, week: int) -> List:
 def get_scoreboard(league: League, week: int) -> List[Dict[str, Any]]:
     """
     Return a list of matchups with team names, scores, and logos for the given week.
-    If one side's score is 0 while the other is > 0, treat that side as a BYE.
+    BYE is inferred only when the team object is missing in the box score (home or away is None).
     """
     matchups = []
     box_scores = _get_cached_box_scores(league, week)
@@ -40,27 +40,34 @@ def get_scoreboard(league: League, week: int) -> List[Dict[str, Any]]:
     for b in box_scores:
         home_team_obj = getattr(b, "home_team", None)
         away_team_obj = getattr(b, "away_team", None)
-        home_id = getattr(home_team_obj, "team_id", None)
-        away_id = getattr(away_team_obj, "team_id", None)
-        home_name = getattr(home_team_obj, "team_name", str(home_id if home_id is not None else "Home"))
-        away_name = getattr(away_team_obj, "team_name", str(away_id if away_id is not None else "Away"))
-        home_logo = getattr(home_team_obj, "logo_url", None)
-        away_logo = getattr(away_team_obj, "logo_url", None)
-        home_score = getattr(b, "home_score", 0.0)
-        away_score = getattr(b, "away_score", 0.0)
 
-        # Bye labeling: if one side has 0 and the other > 0, the 0 side is 'Bye'
+        # Scores (as floats, resilient to None)
         try:
-            hs = float(home_score)
-            as_ = float(away_score)
+            hs = float(getattr(b, "home_score", 0.0) or 0.0)
         except (TypeError, ValueError):
             hs = 0.0
+        try:
+            as_ = float(getattr(b, "away_score", 0.0) or 0.0)
+        except (TypeError, ValueError):
             as_ = 0.0
-        if hs == 0.0 and as_ > 0.0:
+
+        # Default fields from team objects when present
+        home_id = getattr(home_team_obj, "team_id", None)
+        away_id = getattr(away_team_obj, "team_id", None)
+        home_name = getattr(home_team_obj, "team_name", None)
+        away_name = getattr(away_team_obj, "team_name", None)
+        home_logo = getattr(home_team_obj, "logo_url", None)
+        away_logo = getattr(away_team_obj, "logo_url", None)
+
+        # Infer BYE only if team object is missing
+        if home_team_obj is None and away_team_obj is None:
+            # Nothing meaningful to display; skip this box score
+            continue
+        if home_team_obj is None:
             home_name = "Bye"
             home_logo = None
             home_id = None
-        elif as_ == 0.0 and hs > 0.0:
+        if away_team_obj is None:
             away_name = "Bye"
             away_logo = None
             away_id = None
@@ -83,18 +90,18 @@ def get_scoreboard(league: League, week: int) -> List[Dict[str, Any]]:
         diff = (hs - as_) if isinstance(hs, (int, float)) and isinstance(as_, (int, float)) else 0.0
         
         # Get team records for W/L display
-        home_wins = team_records.get(home_id, {}).get("wins", 0) if home_id else 0
-        home_losses = team_records.get(home_id, {}).get("losses", 0) if home_id else 0
-        home_ties = team_records.get(home_id, {}).get("ties", 0) if home_id else 0
-        away_wins = team_records.get(away_id, {}).get("wins", 0) if away_id else 0
-        away_losses = team_records.get(away_id, {}).get("losses", 0) if away_id else 0
-        away_ties = team_records.get(away_id, {}).get("ties", 0) if away_id else 0
+        home_wins = team_records.get(home_id, {}).get("wins", 0) if home_id is not None else 0
+        home_losses = team_records.get(home_id, {}).get("losses", 0) if home_id is not None else 0
+        home_ties = team_records.get(home_id, {}).get("ties", 0) if home_id is not None else 0
+        away_wins = team_records.get(away_id, {}).get("wins", 0) if away_id is not None else 0
+        away_losses = team_records.get(away_id, {}).get("losses", 0) if away_id is not None else 0
+        away_ties = team_records.get(away_id, {}).get("ties", 0) if away_id is not None else 0
         
         matchups.append({
             "home_id": home_id,
             "away_id": away_id,
-            "home_team": home_name,
-            "away_team": away_name,
+            "home_team": home_name if home_name is not None else str(home_id if home_id is not None else "Home"),
+            "away_team": away_name if away_name is not None else str(away_id if away_id is not None else "Away"),
             "home_logo": home_logo,
             "away_logo": away_logo,
             "home_score": hs,

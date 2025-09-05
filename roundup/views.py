@@ -375,6 +375,46 @@ def weekly_report_awards_api(request: HttpRequest, year: int, week: int) -> Json
         return JsonResponse({"error": str(e)}, status=500)
 
 
+def weekly_report_incentive_api(request: HttpRequest, year: int, week: int) -> JsonResponse:
+    """Return the dynamic weekly incentive details (title, current leader text, next week's title)."""
+    try:
+        league = get_league(year=year)
+
+        # Determine schedule and which incentive applies this week and next
+        first_week = getattr(league, "firstScoringPeriod", 1) or 1
+        last_week = getattr(league, "finalScoringPeriod", 18) or 18
+        total_weeks = max(1, (last_week - first_week + 1))
+        schedule = generate_weekly_incentive_schedule(total_weeks)
+        idx = max(0, min(len(schedule) - 1, week - first_week))
+
+        this_key = schedule[idx]
+        next_key = schedule[idx + 1] if (idx + 1) < len(schedule) else None
+        this_title = describe_incentive_title(this_key)
+        next_title = describe_incentive_title(next_key) if next_key else ""
+
+        # Compute current leader/winner text based on live data
+        scoreboard = get_scoreboard(league, week)
+        incentives_summary = compute_incentives(scoreboard)
+        performances = get_all_player_performances(league, week)
+        winner_info = compute_incentive_winner(
+            this_key,
+            scoreboard=scoreboard,
+            incentives_summary=incentives_summary,
+            performances=performances,
+        )
+
+        weekly_incentive = {
+            "this_title": this_title,
+            "winner_text": (winner_info or {}).get("winner_text", ""),
+            "next_title": next_title,
+        }
+
+        return JsonResponse({"weekly_incentive": weekly_incentive})
+    except Exception as e:
+        logger.error(f"Error loading weekly incentive: {e}")
+        return JsonResponse({"error": str(e)}, status=500)
+
+
 def draft_analysis(request):
     """
     Display the draft analysis page with snake draft visualization.
